@@ -4,13 +4,18 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
+import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class DatabaseHandler extends SQLiteOpenHelper {
     private static DatabaseHandler instance;
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String DATABASE_NAME = "quizomania";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 12;
 
     //Tables name
     private static final String TABLE_QUIZZES = "quizzes";
@@ -22,14 +27,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String[] ALL_TABLES = {TABLE_QUIZZES, TABLE_CATEGORIES, TABLE_QUESTIONS, TABLE_ANSWERS, TABLE_RATES};
 
     //Quizzes table columns names
-    private static final String KEY_QUIZZES_ID = "quiz_id";
+    public static final String KEY_QUIZZES_ID = "quiz_id";
     private static final String KEY_QUIZZES_CATEGORY_ID = "category_id";
-    private static final String KEY_QUIZZES_TITLE = "title";
-    private static final String KEY_QUIZZES_CONTENT = "content";
+    public static final String KEY_QUIZZES_TITLE = "title";
+    public static final String KEY_QUIZZES_CONTENT = "content";
 
     //Categories table columns names
-    private static final String KEY_CATEGORIES_ID = "category_id";
-    private static final String KEY_CATEGORIES_NAME = "name";
+    public static final String KEY_CATEGORIES_ID = "category_id";
+    public static final String KEY_CATEGORIES_NAME = "name";
 
     //Questions table columns names
     private static final String KEY_QUESTIONS_ID = "question_id";
@@ -62,29 +67,42 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        String CREATE_CATEGORIES_TABLE = "CREATE TABLE IF NOT EXISTS `" + TABLE_CATEGORIES + "` (" +
+                "`" + KEY_CATEGORIES_ID + "` INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "`" + KEY_CATEGORIES_NAME + "` TEXT UNIQUE" +
+                ");";
         String CREATE_QUIZZES_TABLE = "CREATE TABLE IF NOT EXISTS `" + TABLE_QUIZZES + "` (" +
                 "`" + KEY_QUIZZES_ID + "` INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "`" + KEY_QUIZZES_CATEGORY_ID + "` INTEGER NOT NULL," +
                 "`" + KEY_QUIZZES_TITLE + "` TEXT," +
-                "`" + KEY_QUIZZES_CONTENT + "` TEXT);";
-        String CREATE_CATEGORIES_TABLE = "CREATE TABLE IF NOT EXISTS `" + TABLE_CATEGORIES + "` (" +
-                "`" + KEY_CATEGORIES_ID + "` INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "`" + KEY_CATEGORIES_NAME + "` TEXT);";
+                "`" + KEY_QUIZZES_CONTENT + "` TEXT," +
+                "FOREIGN KEY (`" + KEY_QUIZZES_CATEGORY_ID + "`) " +
+                "REFERENCES `" + TABLE_CATEGORIES + "`(`"+ KEY_CATEGORIES_ID +"`)" +
+                ");";
         String CREATE_QUESTIONS_TABLE = "CREATE TABLE IF NOT EXISTS `" + TABLE_QUESTIONS + "` (" +
                 "`" + KEY_QUESTIONS_ID + "` INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "`" + KEY_QUESTIONS_QUIZ_ID + "` INTEGER NOT NULL," +
                 "`" + KEY_QUESTIONS_TEXT + "` TEXT," +
-                "`" + KEY_QUESTIONS_ORDER + "` INTEGER);";
+                "`" + KEY_QUESTIONS_ORDER + "` INTEGER," +
+                "FOREIGN KEY (`" + KEY_QUESTIONS_QUIZ_ID + "`) " +
+                "REFERENCES `" + TABLE_QUIZZES + "`(`"+ KEY_QUIZZES_ID +"`)" +
+                ");";
         String CREATE_ANSWERS_TABLE = "CREATE TABLE IF NOT EXISTS `" + TABLE_ANSWERS + "` (" +
                 "`" + KEY_ANSWERS_QUESTIONS_ID + "` INTEGER NOT NULL," +
                 "`" + KEY_ANSWERS_TEXT + "` TEXT," +
                 "`" + KEY_ANSWERS_IS_CORRECT + "` INTEGER," +
-                "`" + KEY_ANSWERS_ORDER + "` INTEGER);";
+                "`" + KEY_ANSWERS_ORDER + "` INTEGER," +
+                "FOREIGN KEY (`" + KEY_ANSWERS_QUESTIONS_ID + "`) " +
+                "REFERENCES `" + TABLE_QUESTIONS + "`(`"+ KEY_QUESTIONS_ID +"`)" +
+                ");";
         String CREATE_RATES_TABLE = "CREATE TABLE IF NOT EXISTS `" + TABLE_RATES + "` (" +
                 "`" + KEY_RATES_QUIZ_ID + "` INTEGER NOT NULL," +
                 "`" + KEY_RATES_FROM + "` INTEGER," +
                 "`" + KEY_RATES_TO + "` TEXT," +
-                "`" + KEY_RATES_CONTENT + "` INTEGER);";
+                "`" + KEY_RATES_CONTENT + "` INTEGER," +
+                "FOREIGN KEY (`" + KEY_RATES_QUIZ_ID + "`) " +
+                "REFERENCES `" + TABLE_QUIZZES + "`(`"+ KEY_QUIZZES_ID +"`)" +
+                ");";
         String[] queries = {CREATE_QUIZZES_TABLE, CREATE_CATEGORIES_TABLE, CREATE_QUESTIONS_TABLE, CREATE_ANSWERS_TABLE, CREATE_RATES_TABLE};
         for (String query : queries) {
             db.execSQL(query);
@@ -94,8 +112,93 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
         for (String table : ALL_TABLES) {
-            db.execSQL("DROP TABLE IF EXIST " + table);
+            db.execSQL("DROP TABLE IF EXISTS " + table);
         }
         onCreate(db);
+    }
+
+    public void addQuizzes(ArrayList<HashMap<String, String>> arrayList) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "INSERT INTO `"+ TABLE_QUIZZES +"`(`"+ KEY_QUIZZES_ID +"`,`"+ KEY_QUIZZES_TITLE +"`,`"+ KEY_QUIZZES_CONTENT +"`,`"+ KEY_CATEGORIES_ID +"`) VALUES(?,?,?,?);";
+        SQLiteStatement stmt = db.compileStatement(query);
+        db.beginTransaction();
+        for (HashMap<String, String>  map : arrayList) {
+            Log.d("DB", "quiz = " + map.get(KEY_QUIZZES_TITLE));
+            stmt.bindString(1, map.get(KEY_QUIZZES_ID));
+            stmt.bindString(2, map.get(KEY_QUIZZES_TITLE));
+            stmt.bindString(3, map.get(KEY_QUIZZES_CONTENT));
+            stmt.bindString(4, map.get(KEY_CATEGORIES_ID));
+            stmt.executeInsert();
+            stmt.clearBindings();
+        }
+        db.setTransactionSuccessful();
+        db.endTransaction();
+        db.close();
+    }
+
+    public void addCategories(ArrayList<String> categoriesList) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "INSERT OR IGNORE INTO `"+ TABLE_CATEGORIES +"`(`"+ KEY_CATEGORIES_NAME +"`) VALUES(?);";
+        SQLiteStatement stmt = db.compileStatement(query);
+        db.beginTransaction();
+        for (String categoryName : categoriesList) {
+            stmt.bindString(1, categoryName);
+            stmt.executeInsert();
+            stmt.clearBindings();
+        }
+        db.setTransactionSuccessful();
+        db.endTransaction();
+        db.close();
+    }
+
+    public int getCategoryIdByName(String name) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_CATEGORIES, new String[] {KEY_CATEGORIES_ID}, KEY_CATEGORIES_NAME + " = ?", new String[] {name}, null, null, null, "1");
+        cursor.moveToNext();
+        int value = cursor.getInt(0);
+        cursor.close();
+        db.close();
+        return value;
+    }
+
+    public ArrayList<Long> getQuizzesIds() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_QUIZZES, new String[] {KEY_QUIZZES_ID}, null, null, null, null, null);
+        ArrayList<Long> quizzesIdsList = new ArrayList<>();
+        while (cursor.moveToNext())
+            quizzesIdsList.add(cursor.getLong(0));
+        cursor.close();
+        db.close();
+        return quizzesIdsList;
+    }
+
+    public int getCountOfQuizzesById(long id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_QUIZZES + "` WHERE `" + KEY_QUIZZES_ID + "` = "+ Long.toString(id) +";", null);
+        cursor.moveToNext();
+        int value = cursor.getInt(0);
+        cursor.close();
+        db.close();
+        return value;
+    }
+
+    //method for debug only
+    public String getTableAsString(String tableName) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String tableString = String.format("Table %s:\n", tableName);
+        Cursor allRows  = db.rawQuery("SELECT * FROM " + tableName, null);
+        if (allRows.moveToFirst() ){
+            String[] columnNames = allRows.getColumnNames();
+            do {
+                for (String name: columnNames) {
+                    tableString += String.format("%s: %s\n", name,
+                            allRows.getString(allRows.getColumnIndex(name)));
+                }
+                tableString += "\n";
+
+            } while (allRows.moveToNext());
+        }
+        allRows.close();
+        return tableString;
     }
 }

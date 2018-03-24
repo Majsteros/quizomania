@@ -8,6 +8,12 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <Button
+            android:id="@+id/debug_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="UI update"/>
+
         <TextView
             android:id="@+id/debug_quizzes"
             android:layout_width="wrap_content"
