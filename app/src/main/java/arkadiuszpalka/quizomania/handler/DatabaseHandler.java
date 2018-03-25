@@ -5,16 +5,18 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 public class DatabaseHandler extends SQLiteOpenHelper {
     private static DatabaseHandler instance;
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String DATABASE_NAME = "quizomania";
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 8;
 
     //Tables name
     private static final String TABLE_QUIZZES = "quizzes";
@@ -39,7 +41,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public static final String KEY_QUESTIONS_ID = "question_id";
     public static final String KEY_QUESTIONS_QUIZ_ID = "quiz_id";
     public static final String KEY_QUESTIONS_TEXT = "text";
-    public static final String KEY_QUESTIONS_ORDER = "order";
+    public static final String KEY_QUESTIONS_ORDER = "order_test";
 
     //Answers table columns names
     private static final String KEY_ANSWERS_QUESTIONS_ID = "question_id";
@@ -189,16 +191,63 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public int getQuestionIdByQuizId(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(TABLE_QUESTIONS, new String[] {KEY_QUESTIONS_ID}, KEY_QUESTIONS_QUIZ_ID + " = ?", new String[] {Long.toString(id)}, null, null, null, "1");
-        cursor.moveToNext();
-        int value = cursor.getInt(0);
+        int value = 0;
+        while (cursor.moveToNext()) {
+            value = cursor.getInt(0);
+        }
         cursor.close();
         db.close();
         return value;
     }
 
+    public HashMap<String, Object> getQuestionByQuizId(long id) {
+        HashMap<String, Object> question = new HashMap<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_QUESTIONS, new String[] {KEY_QUESTIONS_ID, KEY_QUESTIONS_TEXT, KEY_QUESTIONS_ORDER}, KEY_QUESTIONS_QUIZ_ID + " = ?", new String[] {Long.toString(id)}, null, null, null, "1");
+        while (cursor.moveToNext()) {
+            question.put(KEY_QUESTIONS_ID, cursor.getInt(0));
+            question.put(KEY_QUESTIONS_TEXT, cursor.getString(1));
+            question.put(KEY_QUESTIONS_ORDER, cursor.getInt(2));
+        }
+        cursor.close();
+        db.close();
+        return question;
+    }
+
+    public ArrayList<TreeMap<String, Object>> getAnswersByQuestionId(int id) {
+        ArrayList<TreeMap<String, Object>> answers = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_ANSWERS, new String[] {KEY_ANSWERS_TEXT, KEY_ANSWERS_ORDER, KEY_ANSWERS_IS_CORRECT}, KEY_ANSWERS_QUESTIONS_ID + " = ?", new String[] {Long.toString(id)}, null, null, KEY_ANSWERS_ORDER);
+        while (cursor.moveToNext()) {
+            TreeMap<String, Object> answer = new TreeMap<>();
+            answer.put(KEY_ANSWERS_TEXT, cursor.getString(0));
+            answer.put(KEY_ANSWERS_ORDER, cursor.getInt(1));
+            answer.put(KEY_ANSWERS_IS_CORRECT, cursor.getInt(2));
+            answers.add(answer);
+        }
+        cursor.close();
+        db.close();
+        return answers;
+    }
+
+    public ArrayList<HashMap<String, String>> getQuizzes() {
+        ArrayList<HashMap<String, String>> quizzes = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_QUIZZES, new String[] {KEY_QUIZZES_ID, KEY_QUIZZES_TITLE}, null, null, KEY_QUIZZES_ID, null, null);
+        while (cursor.moveToNext()) {
+            HashMap<String, String> quiz = new HashMap<>();
+            quiz.put(KEY_QUIZZES_ID, Long.toString(cursor.getLong(0)));
+            quiz.put(KEY_QUIZZES_TITLE, cursor.getString(1));
+            quizzes.add(quiz);
+        }
+        cursor.close();
+        db.close();
+        return quizzes;
+    }
+
     public ArrayList<Long> getQuizzesIds() {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_QUIZZES, new String[] {KEY_QUIZZES_ID}, null, null, null, null, null, null);
+        Cursor cursor = db.query(TABLE_QUIZZES, new String[] {KEY_QUIZZES_ID}, null, null, null, null, null);
         ArrayList<Long> ids = new ArrayList<>();
         while (cursor.moveToNext()) {
             ids.add(cursor.getLong(0));
@@ -211,8 +260,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public int getCategoryIdByName(String name) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(TABLE_CATEGORIES, new String[] {KEY_CATEGORIES_ID}, KEY_CATEGORIES_NAME + " = ?", new String[] {name}, null, null, null, "1");
-        cursor.moveToNext();
-        int value = cursor.getInt(0);
+        int value = 0;
+        while (cursor.moveToNext()) {
+            value = cursor.getInt(0);
+        }
         cursor.close();
         db.close();
         return value;
@@ -221,8 +272,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public int getCountOfQuizzesById(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_QUIZZES + "` WHERE `" + KEY_QUIZZES_ID + "` = "+ Long.toString(id) +";", null);
-        cursor.moveToNext();
-        int value = cursor.getInt(0);
+        int value = 0;
+        while (cursor.moveToNext()) {
+            value = cursor.getInt(0);
+        }
         cursor.close();
         db.close();
         return value;

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="arkadiuszpalka.quizomania.activity.QuizActivity">
+
+    <TextView
+        android:id="@+id/text_quiz_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pytanie"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+        android:textSize="20sp"
+        android:textAlignment="center"
+        android:layout_marginTop="@dimen/title_margin"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/progressbar_quiz"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/progressbar_height"
+        android:layout_marginEnd="@dimen/side_margin"
+        android:layout_marginStart="@dimen/side_margin"
+        android:max="100"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_quiz_title" />
+</android.support.constraint.ConstraintLayout>

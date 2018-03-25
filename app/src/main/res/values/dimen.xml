@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="title_margin">8dp</dimen>
+    <dimen name="side_margin">8dp</dimen>
+    <dimen name="progressbar_height">16dp</dimen>
+</resources>
