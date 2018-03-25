@@ -2,6 +2,7 @@ package arkadiuszpalka.quizomania.activity;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -32,44 +33,25 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         new GetQuizzes(this).execute();
-        final DatabaseHandler db = DatabaseHandler.getInstance(getApplicationContext());
-
-        findViewById(R.id.debug_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((TextView)findViewById(R.id.debug_quizzes)).setText(db.getTableAsString("quizzes"));
-                ((TextView)findViewById(R.id.debug_categories)).setText(db.getTableAsString("categories"));
-                ((TextView)findViewById(R.id.debug_questions)).setText(db.getTableAsString("questions"));
-                ((TextView)findViewById(R.id.debug_answers)).setText(db.getTableAsString("answers"));
-                ((TextView)findViewById(R.id.debug_rates)).setText(db.getTableAsString("rates"));
-            }
-        });
+        new GetQuestions(this).execute();
     }
 
     public static class GetQuestions extends AsyncTask<Long, Void, ArrayList<String>> {
-        private final WeakReference<Activity> weakReference;
-        private ArrayList<Long> quizzesIdsList;
         private DatabaseHandler db;
 
-        public GetQuestions(Activity activity) {
-            weakReference = new WeakReference<>(activity);
+        private GetQuestions(Activity activity) {
             if (activity == null || activity.isFinishing()) {
                 return;
             }
             db = DatabaseHandler.getInstance(activity.getApplicationContext());
-            quizzesIdsList = db.getQuizzesIds();
         }
 
         @Override
-        protected void onPreExecute() {
-
-        }
-
-        @Override
-        protected ArrayList<String> doInBackground(Long... longs) {
+        protected ArrayList<String> doInBackground(Long... params) {
             ArrayList<String> results = new ArrayList<>();
-            if (quizzesIdsList.size() > 0) {
-                for (Long id : longs) {
+            ArrayList<Long> ids = db.getQuizzesIds();
+            if (ids.size() > 0) {
+                for (Long id : ids) {
                     try {
                         results.add(
                                 new HttpHandler().request("http://quiz.o2.pl/api/v1/quiz/" + id + "/0")
@@ -86,32 +68,64 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(ArrayList<String> results) {
             super.onPostExecute(results);
+            Log.d("MAIN", "Inserting questions");
             if (results.size() > 0 ) {
                 for (String result : results) {
                     try {
-                        JSONArray questions = new JSONObject(result).getJSONArray("items");
+                        JSONObject jsonObject = new JSONObject(result);
+                        JSONArray questions = jsonObject.getJSONArray("questions");
                         ArrayList<HashMap<String, String>> questionsList = new ArrayList<>();
+                        ArrayList<HashMap<String, String>> answersList = new ArrayList<>();
                         for (int i = 0; i < questions.length(); i++) {
                             JSONObject question = questions.getJSONObject(i);
                             JSONArray answers = question.getJSONArray("answers");
                             String questionText = question.getString("text");
                             int questionOrder = question.getInt("order");
-                            long quizId = (long) question.get("id");
+                            long quizId = (long) jsonObject.get("id");
                             for (int j = 0; j < answers.length(); j++) {
                                 JSONObject answer = answers.getJSONObject(j);
+                                HashMap<String, String> answersHashMap = new HashMap<>();
                                 int answerOrder = answer.getInt("order");
                                 String answerText = answer.getString("text");
                                 if (answer.has("isCorrect")) {
-                                    int answerIsCorrect = answer.getInt("isCorrect");
+                                    answersHashMap.put(KEY_ANSWERS_IS_CORRECT, Integer.toString(
+                                            answer.getInt("isCorrect")
+                                    ));
                                 }
-                            }
 
+                                answersHashMap.put(KEY_ANSWERS_ORDER, Integer.toString(answerOrder));
+                                answersHashMap.put(KEY_ANSWERS_TEXT, answerText);
+                                answersHashMap.put(KEY_QUESTIONS_QUIZ_ID, Long.toString(quizId));
+
+                                answersList.add(answersHashMap);
+                            }
+                            HashMap<String, String> questionHashMap = new HashMap<>();
+
+                            questionHashMap.put(KEY_QUESTIONS_QUIZ_ID, Long.toString(quizId));
+                            questionHashMap.put(KEY_QUESTIONS_TEXT, questionText);
+                            questionHashMap.put(KEY_QUESTIONS_ORDER, Integer.toString(questionOrder));
+
+                            questionsList.add(questionHashMap);
+                        }
+                        if (questionsList.size() > 0) {
+                            db.addQuestions(questionsList);
+                        }
+                        if (answersList.size() > 0) {
+                            for (HashMap<String, String> map : answersList) {
+                                map.put(KEY_QUESTIONS_ID,
+                                        Integer.toString(
+                                                db.getQuestionIdByQuizId(
+                                                        Long.parseLong(
+                                                                map.get(KEY_QUESTIONS_QUIZ_ID)))));
+                            }
+                            db.addAnswers(answersList);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
             }
+            Log.d("MAIN", "Questions was inserted");
         }
     }
 
@@ -119,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
     public static class GetQuizzes extends AsyncTask<Void, Void, String> {
         private final WeakReference<Activity> weakReference;
 
-        public GetQuizzes(Activity activity) {
+        private GetQuizzes(Activity activity) {
             this.weakReference = new WeakReference<>(activity);
         }
 
@@ -136,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            Log.d("MAIN", "Result = " + result);
+            Log.d("MAIN", "Inserting quizzes");
             Activity activity = weakReference.get();
             if (activity == null || activity.isFinishing()) {
                 return;
@@ -189,6 +203,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(context, "Brak danych", Toast.LENGTH_LONG).show();
             }
+            Log.d("MAIN", "Quizzes was inserted");
         }
     }
 }

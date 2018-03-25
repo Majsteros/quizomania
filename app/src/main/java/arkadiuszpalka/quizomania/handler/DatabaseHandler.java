@@ -5,7 +5,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,7 +14,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String DATABASE_NAME = "quizomania";
-    private static final int DATABASE_VERSION = 12;
+    private static final int DATABASE_VERSION = 1;
 
     //Tables name
     private static final String TABLE_QUIZZES = "quizzes";
@@ -37,16 +36,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public static final String KEY_CATEGORIES_NAME = "name";
 
     //Questions table columns names
-    private static final String KEY_QUESTIONS_ID = "question_id";
-    private static final String KEY_QUESTIONS_QUIZ_ID = "quiz_id";
-    private static final String KEY_QUESTIONS_TEXT = "text";
-    private static final String KEY_QUESTIONS_ORDER = "order";
+    public static final String KEY_QUESTIONS_ID = "question_id";
+    public static final String KEY_QUESTIONS_QUIZ_ID = "quiz_id";
+    public static final String KEY_QUESTIONS_TEXT = "text";
+    public static final String KEY_QUESTIONS_ORDER = "order";
 
     //Answers table columns names
     private static final String KEY_ANSWERS_QUESTIONS_ID = "question_id";
-    private static final String KEY_ANSWERS_TEXT = "text";
-    private static final String KEY_ANSWERS_IS_CORRECT = "is_correct";
-    private static final String KEY_ANSWERS_ORDER = "order";
+    public static final String KEY_ANSWERS_TEXT = "text";
+    public static final String KEY_ANSWERS_IS_CORRECT = "is_correct";
+    public static final String KEY_ANSWERS_ORDER = "order";
 
     //Rates table columns names
     private static final String KEY_RATES_QUIZ_ID = "quiz_id";
@@ -117,13 +116,49 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    public void addAnswers(ArrayList<HashMap<String, String>> answers) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "INSERT INTO `"+ TABLE_ANSWERS +"`(`"+ KEY_ANSWERS_QUESTIONS_ID +"`,`"+ KEY_ANSWERS_IS_CORRECT +"`,`"+ KEY_ANSWERS_ORDER +"`,`"+ KEY_ANSWERS_TEXT +"`) VALUES(?,?,?,?);";
+        SQLiteStatement stmt = db.compileStatement(query);
+        db.beginTransaction();
+        for (HashMap<String, String> map : answers) {
+            stmt.bindString(1, map.get(KEY_ANSWERS_QUESTIONS_ID));
+            stmt.bindString(2,
+                    map.get(KEY_ANSWERS_IS_CORRECT) == null ? "0" : map.get(KEY_ANSWERS_IS_CORRECT)
+            );
+            stmt.bindString(3, map.get(KEY_ANSWERS_ORDER));
+            stmt.bindString(4, map.get(KEY_ANSWERS_TEXT));
+            stmt.executeInsert();
+            stmt.clearBindings();
+        }
+        db.setTransactionSuccessful();
+        db.endTransaction();
+        db.close();
+    }
+
+    public void addQuestions(ArrayList<HashMap<String, String>> questions) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "INSERT INTO `"+ TABLE_QUESTIONS +"`(`"+ KEY_QUESTIONS_QUIZ_ID +"`,`"+ KEY_QUESTIONS_TEXT +"`,`"+ KEY_QUESTIONS_ORDER +"`) VALUES(?,?,?);";
+        SQLiteStatement stmt = db.compileStatement(query);
+        db.beginTransaction();
+        for (HashMap<String, String> map : questions) {
+            stmt.bindString(1, map.get(KEY_QUESTIONS_QUIZ_ID));
+            stmt.bindString(2, map.get(KEY_QUESTIONS_TEXT));
+            stmt.bindString(3, map.get(KEY_QUESTIONS_ORDER));
+            stmt.executeInsert();
+            stmt.clearBindings();
+        }
+        db.setTransactionSuccessful();
+        db.endTransaction();
+        db.close();
+    }
+
     public void addQuizzes(ArrayList<HashMap<String, String>> arrayList) {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "INSERT INTO `"+ TABLE_QUIZZES +"`(`"+ KEY_QUIZZES_ID +"`,`"+ KEY_QUIZZES_TITLE +"`,`"+ KEY_QUIZZES_CONTENT +"`,`"+ KEY_CATEGORIES_ID +"`) VALUES(?,?,?,?);";
         SQLiteStatement stmt = db.compileStatement(query);
         db.beginTransaction();
         for (HashMap<String, String>  map : arrayList) {
-            Log.d("DB", "quiz = " + map.get(KEY_QUIZZES_TITLE));
             stmt.bindString(1, map.get(KEY_QUIZZES_ID));
             stmt.bindString(2, map.get(KEY_QUIZZES_TITLE));
             stmt.bindString(3, map.get(KEY_QUIZZES_CONTENT));
@@ -136,12 +171,12 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
-    public void addCategories(ArrayList<String> categoriesList) {
+    public void addCategories(ArrayList<String> categories) {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "INSERT OR IGNORE INTO `"+ TABLE_CATEGORIES +"`(`"+ KEY_CATEGORIES_NAME +"`) VALUES(?);";
         SQLiteStatement stmt = db.compileStatement(query);
         db.beginTransaction();
-        for (String categoryName : categoriesList) {
+        for (String categoryName : categories) {
             stmt.bindString(1, categoryName);
             stmt.executeInsert();
             stmt.clearBindings();
@@ -149,6 +184,28 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.setTransactionSuccessful();
         db.endTransaction();
         db.close();
+    }
+
+    public int getQuestionIdByQuizId(long id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_QUESTIONS, new String[] {KEY_QUESTIONS_ID}, KEY_QUESTIONS_QUIZ_ID + " = ?", new String[] {Long.toString(id)}, null, null, null, "1");
+        cursor.moveToNext();
+        int value = cursor.getInt(0);
+        cursor.close();
+        db.close();
+        return value;
+    }
+
+    public ArrayList<Long> getQuizzesIds() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_QUIZZES, new String[] {KEY_QUIZZES_ID}, null, null, null, null, null, null);
+        ArrayList<Long> ids = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            ids.add(cursor.getLong(0));
+        }
+        cursor.close();
+        db.close();
+        return ids;
     }
 
     public int getCategoryIdByName(String name) {
@@ -159,17 +216,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         cursor.close();
         db.close();
         return value;
-    }
-
-    public ArrayList<Long> getQuizzesIds() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_QUIZZES, new String[] {KEY_QUIZZES_ID}, null, null, null, null, null);
-        ArrayList<Long> quizzesIdsList = new ArrayList<>();
-        while (cursor.moveToNext())
-            quizzesIdsList.add(cursor.getLong(0));
-        cursor.close();
-        db.close();
-        return quizzesIdsList;
     }
 
     public int getCountOfQuizzesById(long id) {
