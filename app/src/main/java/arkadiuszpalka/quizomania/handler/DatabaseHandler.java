@@ -16,7 +16,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String DATABASE_NAME = "quizomania";
-    private static final int DATABASE_VERSION = 8;
+    private static final int DATABASE_VERSION = 13;
 
     //Tables name
     private static final String TABLE_QUIZZES = "quizzes";
@@ -41,13 +41,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public static final String KEY_QUESTIONS_ID = "question_id";
     public static final String KEY_QUESTIONS_QUIZ_ID = "quiz_id";
     public static final String KEY_QUESTIONS_TEXT = "text";
-    public static final String KEY_QUESTIONS_ORDER = "order_test";
+    public static final String KEY_QUESTIONS_ORDER = "order_no";
 
     //Answers table columns names
     private static final String KEY_ANSWERS_QUESTIONS_ID = "question_id";
     public static final String KEY_ANSWERS_TEXT = "text";
     public static final String KEY_ANSWERS_IS_CORRECT = "is_correct";
-    public static final String KEY_ANSWERS_ORDER = "order";
+    public static final String KEY_ANSWERS_ORDER = "order_no";
 
     //Rates table columns names
     private static final String KEY_RATES_QUIZ_ID = "quiz_id";
@@ -138,6 +138,21 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    public void addQuestion(HashMap<String, String> question) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "INSERT INTO `"+ TABLE_QUESTIONS +"`(`"+ KEY_QUESTIONS_QUIZ_ID +"`,`"+ KEY_QUESTIONS_TEXT +"`,`"+ KEY_QUESTIONS_ORDER +"`) VALUES(?,?,?);";
+        SQLiteStatement stmt = db.compileStatement(query);
+        db.beginTransaction();
+            stmt.bindString(1, question.get(KEY_QUESTIONS_QUIZ_ID));
+            stmt.bindString(2, question.get(KEY_QUESTIONS_TEXT));
+            stmt.bindString(3, question.get(KEY_QUESTIONS_ORDER));
+            stmt.executeInsert();
+            stmt.clearBindings();
+        db.setTransactionSuccessful();
+        db.endTransaction();
+        db.close();
+    }
+
     public void addQuestions(ArrayList<HashMap<String, String>> questions) {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "INSERT INTO `"+ TABLE_QUESTIONS +"`(`"+ KEY_QUESTIONS_QUIZ_ID +"`,`"+ KEY_QUESTIONS_TEXT +"`,`"+ KEY_QUESTIONS_ORDER +"`) VALUES(?,?,?);";
@@ -190,7 +205,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public int getQuestionIdByQuizId(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_QUESTIONS, new String[] {KEY_QUESTIONS_ID}, KEY_QUESTIONS_QUIZ_ID + " = ?", new String[] {Long.toString(id)}, null, null, null, "1");
+        Cursor cursor = db.rawQuery("SELECT `" + KEY_QUESTIONS_ID + "` FROM `" + TABLE_QUESTIONS + "` WHERE `" + KEY_QUESTIONS_QUIZ_ID + "` = '" + Long.toString(id) + "' LIMIT 1", null);
         int value = 0;
         while (cursor.moveToNext()) {
             value = cursor.getInt(0);
@@ -200,10 +215,22 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return value;
     }
 
-    public HashMap<String, Object> getQuestionByQuizId(long id) {
+    public int getQuestionIdByQuizIdOrder(long id, int order) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT `" + KEY_QUESTIONS_ID + "` FROM `" + TABLE_QUESTIONS + "` WHERE `" + KEY_QUESTIONS_QUIZ_ID + "` = '" + Long.toString(id) + "' AND `" + KEY_QUESTIONS_ORDER + "` = '" + Integer.toString(order) + "' LIMIT 1", null);
+        int value = 0;
+        while (cursor.moveToNext()) {
+            value = cursor.getInt(0);
+        }
+        cursor.close();
+        db.close();
+        return value;
+    }
+
+    public HashMap<String, Object> getQuestionByQuizIdOrder(long id, int order) {
         HashMap<String, Object> question = new HashMap<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_QUESTIONS, new String[] {KEY_QUESTIONS_ID, KEY_QUESTIONS_TEXT, KEY_QUESTIONS_ORDER}, KEY_QUESTIONS_QUIZ_ID + " = ?", new String[] {Long.toString(id)}, null, null, null, "1");
+        Cursor cursor = db.rawQuery("SELECT `" + KEY_QUESTIONS_ID + "`,`" + KEY_QUESTIONS_TEXT + "`,`" + KEY_QUESTIONS_ORDER + "` FROM `" + TABLE_QUESTIONS + "` WHERE `" + KEY_QUESTIONS_QUIZ_ID + "` = '"+ Long.toString(id) + "' AND `" + KEY_QUESTIONS_ORDER + "` = '" + Integer.toString(order) + "' LIMIT 1", null);
         while (cursor.moveToNext()) {
             question.put(KEY_QUESTIONS_ID, cursor.getInt(0));
             question.put(KEY_QUESTIONS_TEXT, cursor.getString(1));
@@ -217,7 +244,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public ArrayList<TreeMap<String, Object>> getAnswersByQuestionId(int id) {
         ArrayList<TreeMap<String, Object>> answers = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_ANSWERS, new String[] {KEY_ANSWERS_TEXT, KEY_ANSWERS_ORDER, KEY_ANSWERS_IS_CORRECT}, KEY_ANSWERS_QUESTIONS_ID + " = ?", new String[] {Long.toString(id)}, null, null, KEY_ANSWERS_ORDER);
+        Cursor cursor = db.rawQuery("SELECT `" + KEY_ANSWERS_TEXT + "`,`" + KEY_ANSWERS_ORDER + "`,`" + KEY_ANSWERS_IS_CORRECT + "` FROM `" + TABLE_ANSWERS + "` WHERE `" + KEY_ANSWERS_QUESTIONS_ID + "` = '" + Integer.toString(id) + "' ORDER BY `" + KEY_ANSWERS_ORDER +"`",null);
         while (cursor.moveToNext()) {
             TreeMap<String, Object> answer = new TreeMap<>();
             answer.put(KEY_ANSWERS_TEXT, cursor.getString(0));
@@ -233,7 +260,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public ArrayList<HashMap<String, String>> getQuizzes() {
         ArrayList<HashMap<String, String>> quizzes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_QUIZZES, new String[] {KEY_QUIZZES_ID, KEY_QUIZZES_TITLE}, null, null, KEY_QUIZZES_ID, null, null);
+        Cursor cursor = db.rawQuery("SELECT `" + KEY_QUIZZES_ID + "`,`" + KEY_QUIZZES_TITLE + "` FROM `" + TABLE_QUIZZES + "` ORDER BY `" + KEY_QUIZZES_ID +"`", null);
         while (cursor.moveToNext()) {
             HashMap<String, String> quiz = new HashMap<>();
             quiz.put(KEY_QUIZZES_ID, Long.toString(cursor.getLong(0)));
@@ -259,7 +286,19 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public int getCategoryIdByName(String name) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_CATEGORIES, new String[] {KEY_CATEGORIES_ID}, KEY_CATEGORIES_NAME + " = ?", new String[] {name}, null, null, null, "1");
+        Cursor cursor = db.rawQuery("SELECT `" + KEY_CATEGORIES_ID + "` FROM `" + TABLE_CATEGORIES + "` WHERE `"+ KEY_CATEGORIES_NAME +"` = '"+ name + "' LIMIT 1", null);
+        int value = 0;
+        while (cursor.moveToNext()) {
+            value = cursor.getInt(0);
+        }
+        cursor.close();
+        db.close();
+        return value;
+    }
+
+    public int getCountOfQuestionsById(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_QUESTIONS + "` WHERE `" + KEY_QUESTIONS_ID + "` = '"+ Integer.toString(id) +"'", null);
         int value = 0;
         while (cursor.moveToNext()) {
             value = cursor.getInt(0);
@@ -271,7 +310,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public int getCountOfQuizzesById(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_QUIZZES + "` WHERE `" + KEY_QUIZZES_ID + "` = "+ Long.toString(id) +";", null);
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_QUIZZES + "` WHERE `" + KEY_QUIZZES_ID + "` = '"+ Long.toString(id) +"'", null);
         int value = 0;
         while (cursor.moveToNext()) {
             value = cursor.getInt(0);
@@ -285,7 +324,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public String getTableAsString(String tableName) {
         SQLiteDatabase db = this.getReadableDatabase();
         String tableString = String.format("Table %s:\n", tableName);
-        Cursor allRows  = db.rawQuery("SELECT * FROM " + tableName, null);
+        Cursor allRows  = db.rawQuery("SELECT * FROM " + tableName + " LIMIT 200", null);
         if (allRows.moveToFirst() ){
             String[] columnNames = allRows.getColumnNames();
             do {

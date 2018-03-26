@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             ArrayList<Long> ids = getQuizzes();
+            Log.d("MAIN", "ids size: " + ids.size());
             getQuestions(ids);
             onEnd();
         }
@@ -92,12 +93,12 @@ public class MainActivity extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+                Log.d("MAIN", "Quizzes was inserted");
                 return ids;
             } else {
                 Toast.makeText(context, "Brak danych", Toast.LENGTH_LONG).show();
+                return new ArrayList<>();
             }
-            Log.d("MAIN", "Quizzes was inserted");
-            return new ArrayList<>();
         }
 
         private void getQuestions(ArrayList<Long> ids) {
@@ -108,55 +109,43 @@ public class MainActivity extends AppCompatActivity {
                         String result = new HttpHandler().request("http://quiz.o2.pl/api/v1/quiz/" + id + "/0");
                         if (result != null) {
                             JSONObject jsonObject = new JSONObject(result);
+                            long quizId = (long) jsonObject.get("id");
                             JSONArray questions = jsonObject.getJSONArray("questions");
-                            ArrayList<HashMap<String, String>> questionsList = new ArrayList<>();
-                            ArrayList<HashMap<String, String>> answersList = new ArrayList<>();
                             for (int i = 0; i < questions.length(); i++) {
+                                ArrayList<HashMap<String, String>> answersList = new ArrayList<>();
                                 JSONObject question = questions.getJSONObject(i);
                                 JSONArray answers = question.getJSONArray("answers");
                                 String questionText = question.getString("text");
                                 int questionOrder = question.getInt("order");
-                                long quizId = (long) jsonObject.get("id");
 
-                                if (db.getCountOfQuizzesById(quizId) == 0) {
-                                    for (int j = 0; j < answers.length(); j++) {
-                                        JSONObject answer = answers.getJSONObject(j);
-                                        HashMap<String, String> answersHashMap = new HashMap<>();
-                                        int answerOrder = answer.getInt("order");
-                                        String answerText = answer.getString("text");
-                                        if (answer.has("isCorrect")) {
-                                            answersHashMap.put(KEY_ANSWERS_IS_CORRECT, Integer.toString(
-                                                    answer.getInt("isCorrect")
-                                            ));
-                                        }
+                                HashMap<String, String> questionHashMap = new HashMap<>();
 
-                                        answersHashMap.put(KEY_ANSWERS_ORDER, Integer.toString(answerOrder));
-                                        answersHashMap.put(KEY_ANSWERS_TEXT, answerText);
-                                        answersHashMap.put(KEY_QUESTIONS_QUIZ_ID, Long.toString(quizId));
+                                questionHashMap.put(KEY_QUESTIONS_QUIZ_ID, Long.toString(quizId));
+                                questionHashMap.put(KEY_QUESTIONS_TEXT, questionText);
+                                questionHashMap.put(KEY_QUESTIONS_ORDER, Integer.toString(questionOrder));
 
-                                        answersList.add(answersHashMap);
+
+                                db.addQuestion(questionHashMap);
+                                int questionId = db.getQuestionIdByQuizIdOrder(quizId, questionOrder);
+                                for (int j = 0; j < answers.length(); j++) {
+                                    HashMap<String, String> answersHashMap = new HashMap<>();
+                                    JSONObject answer = answers.getJSONObject(j);
+                                    int answerOrder = answer.getInt("order");
+                                    String answerText = answer.getString("text");
+                                    if (answer.has("isCorrect")) {
+                                        answersHashMap.put(KEY_ANSWERS_IS_CORRECT, Integer.toString(
+                                                answer.getInt("isCorrect")
+                                        ));
                                     }
-                                    HashMap<String, String> questionHashMap = new HashMap<>();
+                                    answersHashMap.put(KEY_ANSWERS_ORDER, Integer.toString(answerOrder));
+                                    answersHashMap.put(KEY_ANSWERS_TEXT, answerText);
+                                    answersHashMap.put(KEY_QUESTIONS_ID, Integer.toString(questionId));
 
-                                    questionHashMap.put(KEY_QUESTIONS_QUIZ_ID, Long.toString(quizId));
-                                    questionHashMap.put(KEY_QUESTIONS_TEXT, questionText);
-                                    questionHashMap.put(KEY_QUESTIONS_ORDER, Integer.toString(questionOrder));
-
-                                    questionsList.add(questionHashMap);
+                                    answersList.add(answersHashMap);
                                 }
-                            }
-                            if (questionsList.size() > 0) {
-                                db.addQuestions(questionsList);
-                            }
-                            if (answersList.size() > 0) {
-                                for (HashMap<String, String> map : answersList) {
-                                    map.put(KEY_QUESTIONS_ID,
-                                            Integer.toString(
-                                                    db.getQuestionIdByQuizId(
-                                                            Long.parseLong(
-                                                                    map.get(KEY_QUESTIONS_QUIZ_ID)))));
+                                if (answersList.size() > 0) {
+                                    db.addAnswers(answersList);
                                 }
-                                db.addAnswers(answersList);
                             }
                         }
                     } catch (JSONException e) {
@@ -165,8 +154,8 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
-            }
-            Log.d("MAIN", "Questions was inserted");
+                Log.d("MAIN", "Questions was inserted");
+            } else Log.d("MAIN", "0 questions was inserted");
         }
 
         private void onEnd() {
