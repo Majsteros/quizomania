@@ -59,7 +59,6 @@ public class QuizzesRecyclerViewAdapter extends RecyclerView.Adapter<QuizzesRecy
     @Override
     public void onBindViewHolder(QuizzesRecyclerViewAdapter.ViewHolder holder, int position) {
         holder.quizTitle.setText(quizzesList.get(position).get(KEY_QUIZZES_TITLE));
-        holder.quizState.setText(quizzesList.get(position).get(KEY_QUIZZES_ID));
         holder.setId(
                 Long.parseLong(
                         quizzesList.get(position).get(KEY_QUIZZES_ID))

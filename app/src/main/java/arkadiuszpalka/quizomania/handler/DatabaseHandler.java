@@ -296,9 +296,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return value;
     }
 
-    public int getCountOfQuestionsById(int id) {
+    public int getCountOfQuestionsById(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_QUESTIONS + "` WHERE `" + KEY_QUESTIONS_ID + "` = '"+ Integer.toString(id) +"'", null);
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_QUESTIONS + "` WHERE `" + KEY_QUESTIONS_QUIZ_ID + "` = '"+ Long.toString(id) +"'", null);
         int value = 0;
         while (cursor.moveToNext()) {
             value = cursor.getInt(0);
