@@ -1,5 +1,6 @@
 package arkadiuszpalka.quizomania.handler;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -16,7 +17,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String DATABASE_NAME = "quizomania";
-    private static final int DATABASE_VERSION = 13;
+    private static final int DATABASE_VERSION = 2;
 
     //Tables name
     private static final String TABLE_QUIZZES = "quizzes";
@@ -24,8 +25,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String TABLE_QUESTIONS = "questions";
     private static final String TABLE_ANSWERS = "answers";
     private static final String TABLE_RATES = "rates";
+    private static final String TABLE_SEEDS = "seeds";
 
-    private static final String[] ALL_TABLES = {TABLE_QUIZZES, TABLE_CATEGORIES, TABLE_QUESTIONS, TABLE_ANSWERS, TABLE_RATES};
+    private static final String[] ALL_TABLES = {TABLE_QUIZZES, TABLE_CATEGORIES, TABLE_QUESTIONS, TABLE_ANSWERS, TABLE_RATES, TABLE_SEEDS};
 
     //Quizzes table columns names
     public static final String KEY_QUIZZES_ID = "quiz_id";
@@ -41,19 +43,23 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public static final String KEY_QUESTIONS_ID = "question_id";
     public static final String KEY_QUESTIONS_QUIZ_ID = "quiz_id";
     public static final String KEY_QUESTIONS_TEXT = "text";
-    public static final String KEY_QUESTIONS_ORDER = "order_no";
+    public static final String KEY_QUESTIONS_ORDER = "order";
 
     //Answers table columns names
     private static final String KEY_ANSWERS_QUESTIONS_ID = "question_id";
     public static final String KEY_ANSWERS_TEXT = "text";
     public static final String KEY_ANSWERS_IS_CORRECT = "is_correct";
-    public static final String KEY_ANSWERS_ORDER = "order_no";
+    public static final String KEY_ANSWERS_ORDER = "order";
 
     //Rates table columns names
     private static final String KEY_RATES_QUIZ_ID = "quiz_id";
     private static final String KEY_RATES_FROM = "from";
     private static final String KEY_RATES_TO = "to";
     private static final String KEY_RATES_CONTENT = "content";
+
+    //Seeds table columns names
+    private static final String KEY_SEEDS_QUIZ_ID = "quiz_id";
+    private static final String KEY_SEEDS_SEED = "seed";
 
     private DatabaseHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -104,7 +110,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 "FOREIGN KEY (`" + KEY_RATES_QUIZ_ID + "`) " +
                 "REFERENCES `" + TABLE_QUIZZES + "`(`"+ KEY_QUIZZES_ID +"`)" +
                 ");";
-        String[] queries = {CREATE_QUIZZES_TABLE, CREATE_CATEGORIES_TABLE, CREATE_QUESTIONS_TABLE, CREATE_ANSWERS_TABLE, CREATE_RATES_TABLE};
+        String CREATE_SEEDS_TABLE = "CREATE TABLE IF NOT EXISTS `" + TABLE_SEEDS + "` (" +
+                "`" + KEY_SEEDS_QUIZ_ID + "` INTEGER UNIQUE ON CONFLICT IGNORE NOT NULL," +
+                "`" + KEY_SEEDS_SEED + "` VARCHAR(18)," +
+                "FOREIGN KEY (`" + KEY_SEEDS_QUIZ_ID + "`) " +
+                "REFERENCES `" + TABLE_QUIZZES + "`(`"+ KEY_QUIZZES_ID +"`)" +
+                ");";
+        String[] queries = {CREATE_QUIZZES_TABLE, CREATE_CATEGORIES_TABLE, CREATE_QUESTIONS_TABLE, CREATE_ANSWERS_TABLE, CREATE_RATES_TABLE, CREATE_SEEDS_TABLE};
         for (String query : queries) {
             db.execSQL(query);
         }
@@ -138,16 +150,30 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    public void addSeed(long quizId, String seed) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "INSERT INTO `"+ TABLE_SEEDS +"`(`"+ KEY_SEEDS_QUIZ_ID +"`,`"+ KEY_SEEDS_SEED +"`) VALUES(?,?);";
+        SQLiteStatement stmt = db.compileStatement(query);
+        db.beginTransaction();
+        stmt.bindLong(1, quizId);
+        stmt.bindString(2, seed);
+        stmt.executeInsert();
+        stmt.clearBindings();
+        db.setTransactionSuccessful();
+        db.endTransaction();
+        db.close();
+    }
+
     public void addQuestion(HashMap<String, String> question) {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "INSERT INTO `"+ TABLE_QUESTIONS +"`(`"+ KEY_QUESTIONS_QUIZ_ID +"`,`"+ KEY_QUESTIONS_TEXT +"`,`"+ KEY_QUESTIONS_ORDER +"`) VALUES(?,?,?);";
         SQLiteStatement stmt = db.compileStatement(query);
         db.beginTransaction();
-            stmt.bindString(1, question.get(KEY_QUESTIONS_QUIZ_ID));
-            stmt.bindString(2, question.get(KEY_QUESTIONS_TEXT));
-            stmt.bindString(3, question.get(KEY_QUESTIONS_ORDER));
-            stmt.executeInsert();
-            stmt.clearBindings();
+        stmt.bindString(1, question.get(KEY_QUESTIONS_QUIZ_ID));
+        stmt.bindString(2, question.get(KEY_QUESTIONS_TEXT));
+        stmt.bindString(3, question.get(KEY_QUESTIONS_ORDER));
+        stmt.executeInsert();
+        stmt.clearBindings();
         db.setTransactionSuccessful();
         db.endTransaction();
         db.close();
@@ -257,6 +283,18 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return answers;
     }
 
+    public String getSeed(long id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT `" + KEY_SEEDS_SEED + "` FROM `" + TABLE_SEEDS + "` WHERE `"+ KEY_SEEDS_QUIZ_ID +"` = '"+ id + "' LIMIT 1", null);
+        String value = "";
+        while (cursor.moveToNext()) {
+            value = cursor.getString(0);
+        }
+        cursor.close();
+        db.close();
+        return value;
+    }
+
     public ArrayList<HashMap<String, String>> getQuizzes() {
         ArrayList<HashMap<String, String>> quizzes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -311,6 +349,26 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public int getCountOfQuizzesById(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_QUIZZES + "` WHERE `" + KEY_QUIZZES_ID + "` = '"+ Long.toString(id) +"'", null);
+        int value = 0;
+        while (cursor.moveToNext()) {
+            value = cursor.getInt(0);
+        }
+        cursor.close();
+        db.close();
+        return value;
+    }
+
+    public void updateSeed(long id, String seed) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_SEEDS_SEED, seed);
+        db.update(TABLE_SEEDS, values, KEY_SEEDS_QUIZ_ID + " = '" + id + "'", null);
+        db.close();
+    }
+
+    public int getCountOfSeedsById(long id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_SEEDS + "` WHERE `" + KEY_SEEDS_QUIZ_ID + "` = '"+ Long.toString(id) +"'", null);
         int value = 0;
         while (cursor.moveToNext()) {
             value = cursor.getInt(0);

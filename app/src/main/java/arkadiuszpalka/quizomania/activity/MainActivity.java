@@ -38,9 +38,11 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
+            long startTime = System.currentTimeMillis();
             ArrayList<Long> ids = getQuizzes();
-            Log.d("MAIN", "ids size: " + ids.size());
             getQuestions(ids);
+            long stopTime = System.currentTimeMillis();
+            Log.d("MAIN", Long.toString(stopTime - startTime));
             onEnd();
         }
 
@@ -103,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
 
         private void getQuestions(ArrayList<Long> ids) {
             if (ids.size() > 0) {
-                Log.d("MAIN", "Inserting questions");
+                Log.d("MAIN", "Inserting "+ ids.size() +" questions");
                 for (Long id : ids) {
                     try {
                         String result = new HttpHandler().request("http://quiz.o2.pl/api/v1/quiz/" + id + "/0");
