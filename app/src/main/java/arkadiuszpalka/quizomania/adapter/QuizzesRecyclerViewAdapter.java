@@ -3,6 +3,7 @@ package arkadiuszpalka.quizomania.adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,6 +46,7 @@ public class QuizzesRecyclerViewAdapter extends RecyclerView.Adapter<QuizzesRecy
                     DatabaseHandler db = DatabaseHandler.getInstance(context);
                     HashMap<String, String> state = SeedHandler.readSeed(db.getSeed(id));
                     isSolved = Boolean.parseBoolean(state.get(KEY_QUIZ_IS_SOLVED));
+                    Log.d("TEST", "isSolved: " + isSolved);
                     if (isSolved) {
                         db.removeSeed(id);
                     }
@@ -61,10 +63,6 @@ public class QuizzesRecyclerViewAdapter extends RecyclerView.Adapter<QuizzesRecy
 
         public long getId() {
             return id;
-        }
-
-        private boolean isSolved() {
-            return isSolved;
         }
 
         public void setId(long id) {
@@ -90,7 +88,8 @@ public class QuizzesRecyclerViewAdapter extends RecyclerView.Adapter<QuizzesRecy
                         .getSeed(holder.getId()));
         if (state.get(KEY_QUIZ_PROGRESS) != null) {
             int progress = Integer.parseInt(state.get(KEY_QUIZ_PROGRESS));
-            if (holder.isSolved()) {
+            boolean isSolved = Boolean.parseBoolean(state.get(KEY_QUIZ_IS_SOLVED));
+            if (isSolved) {
                 holder.quizState.setText(String.format(
                         Locale.getDefault(),
                         context.getString(R.string.quiz_last_score) + " %d%%",

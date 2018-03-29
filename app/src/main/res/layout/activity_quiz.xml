@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="arkadiuszpalka.quizomania.activity.QuizActivity">
+    tools:context="arkadiuszpalka.quizomania.activity.QuizActivity"
+    tools:layout_editor_absoluteY="25dp">
 
     <TextView
         android:id="@+id/text_quiz_title"
@@ -45,16 +46,20 @@
 
     <RadioGroup
         android:id="@+id/radiogroup_quiz_answers"
-        android:layout_width="344dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/side_margin"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="@dimen/side_margin"
         android:layout_marginStart="@dimen/side_margin"
-        android:layout_marginTop="@dimen/side_margin"
+        android:layout_marginTop="8dp"
         android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline_horizontal">
+        app:layout_constraintTop_toBottomOf="@+id/progressbar_quiz"
+        app:layout_constraintVertical_bias="0.02">
 
     </RadioGroup>
 </android.support.constraint.ConstraintLayout>

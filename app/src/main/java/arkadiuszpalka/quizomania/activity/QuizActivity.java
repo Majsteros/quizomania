@@ -104,13 +104,6 @@ public class QuizActivity extends AppCompatActivity {
                     }
                     radioGroup.addView(radioButton);
                 }
-                Log.d("QUIZ", "Quiz activity:" +
-                        "\nquizId: " + quizId +
-                        "\nquestionOrder: " + questionOrder +
-                        "\nquestionCount: " + questionCount +
-                        "\nquizScore: " + quizScore +
-                        "\nprogress value: " + (int) ((questionOrder / (float) questionCount) * 100)
-                );
             }
         } else {
             Toast.makeText(context, context.getString(R.string.occurred_unknown_error), Toast.LENGTH_LONG).show();
