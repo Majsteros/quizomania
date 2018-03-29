@@ -10,11 +10,15 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 
 import arkadiuszpalka.quizomania.R;
 import arkadiuszpalka.quizomania.activity.QuizActivity;
+import arkadiuszpalka.quizomania.handler.DatabaseHandler;
+import arkadiuszpalka.quizomania.handler.SeedHandler;
 
 import static arkadiuszpalka.quizomania.handler.DatabaseHandler.*;
+import static arkadiuszpalka.quizomania.handler.SeedHandler.*;
 
 public class QuizzesRecyclerViewAdapter extends RecyclerView.Adapter<QuizzesRecyclerViewAdapter.ViewHolder> {
     private ArrayList<HashMap<String, String>> quizzesList;
@@ -28,6 +32,7 @@ public class QuizzesRecyclerViewAdapter extends RecyclerView.Adapter<QuizzesRecy
         private TextView quizTitle, quizState;
         private final Context context;
         private long id;
+        private boolean isSolved;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -37,11 +42,29 @@ public class QuizzesRecyclerViewAdapter extends RecyclerView.Adapter<QuizzesRecy
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    DatabaseHandler db = DatabaseHandler.getInstance(context);
+                    HashMap<String, String> state = SeedHandler.readSeed(db.getSeed(id));
+                    isSolved = Boolean.parseBoolean(state.get(KEY_QUIZ_IS_SOLVED));
+                    if (isSolved) {
+                        db.removeSeed(id);
+                    }
                     Intent intent = new Intent(context, QuizActivity.class);
                     intent.putExtra(EXTRA_QUIZ_ID, id);
                     context.startActivity(intent);
                 }
             });
+        }
+
+        public Context getContext() {
+            return context;
+        }
+
+        public long getId() {
+            return id;
+        }
+
+        public boolean isSolved() {
+            return isSolved;
         }
 
         public void setId(long id) {
@@ -59,10 +82,33 @@ public class QuizzesRecyclerViewAdapter extends RecyclerView.Adapter<QuizzesRecy
     @Override
     public void onBindViewHolder(QuizzesRecyclerViewAdapter.ViewHolder holder, int position) {
         holder.quizTitle.setText(quizzesList.get(position).get(KEY_QUIZZES_TITLE));
-        holder.setId(
-                Long.parseLong(
-                        quizzesList.get(position).get(KEY_QUIZZES_ID))
-        );
+        holder.setId(Long.parseLong(quizzesList.get(position).get(KEY_QUIZZES_ID)));
+
+        Context context = holder.getContext();
+        HashMap<String, String> state = SeedHandler.readSeed(
+                DatabaseHandler.getInstance(context)
+                        .getSeed(holder.getId()));
+        if (state.get(KEY_QUIZ_PROGRESS) != null) {
+            int progress = Integer.parseInt(state.get(KEY_QUIZ_PROGRESS));
+            if (holder.isSolved()) {
+                holder.quizState.setText(String.format(
+                        Locale.getDefault(),
+                        context.getString(R.string.quiz_last_score) + " %d%%",
+                        progress
+                ));
+            } else if (progress == 0) {
+                holder.quizState.setText(context.getString(R.string.quiz_tap_to_start));
+            } else {
+                holder.quizState.setText(String.format(
+                        Locale.getDefault(),
+                        context.getString(R.string.quiz_progress_solve) + " %d%%",
+                        progress
+                ));
+            }
+        } else {
+            holder.quizState.setText(context.getString(R.string.quiz_tap_to_start));
+        }
+
     }
 
     @Override

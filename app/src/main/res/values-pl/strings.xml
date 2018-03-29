@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Quizomania</string>
+    <string name="downloading_data">Pobieranie danych…</string>
+    <string name="occurred_unknown_error">Wystąpił nieznany błąd</string>
+    <string name="congratulations_text">Brawo!</string>
+    <string name="answered_text">Odpowiedziałeś na:</string>
+    <string name="text_questions">pytań</string>
+    <string name="go_to_quizzes">Przejdź do listy quizów</string>
+    <string name="start_again">Rozwiąż jeszcze raz</string>
+    <string name="quiz_progress_solve">Quiz rozwiązany w </string>
+    <string name="quiz_last_score">Ostatni wynik to </string>
+    <string name="quiz_tap_to_start">Kliknij aby rozpocząć</string>
+</resources>

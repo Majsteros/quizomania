@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -98,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("MAIN", "Quizzes was inserted");
                 return ids;
             } else {
-                Toast.makeText(context, "Brak danych", Toast.LENGTH_LONG).show();
                 return new ArrayList<>();
             }
         }

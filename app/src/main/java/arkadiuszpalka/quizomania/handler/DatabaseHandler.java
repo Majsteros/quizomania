@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +16,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String DATABASE_NAME = "quizomania";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 7;
 
     //Tables name
     private static final String TABLE_QUIZZES = "quizzes";
@@ -358,14 +357,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return value;
     }
 
-    public void updateSeed(long id, String seed) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(KEY_SEEDS_SEED, seed);
-        db.update(TABLE_SEEDS, values, KEY_SEEDS_QUIZ_ID + " = '" + id + "'", null);
-        db.close();
-    }
-
     public int getCountOfSeedsById(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_SEEDS + "` WHERE `" + KEY_SEEDS_QUIZ_ID + "` = '"+ Long.toString(id) +"'", null);
@@ -378,23 +369,17 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return value;
     }
 
-    //method for debug only
-    public String getTableAsString(String tableName) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        String tableString = String.format("Table %s:\n", tableName);
-        Cursor allRows  = db.rawQuery("SELECT * FROM " + tableName + " LIMIT 200", null);
-        if (allRows.moveToFirst() ){
-            String[] columnNames = allRows.getColumnNames();
-            do {
-                for (String name: columnNames) {
-                    tableString += String.format("%s: %s\n", name,
-                            allRows.getString(allRows.getColumnIndex(name)));
-                }
-                tableString += "\n";
+    public void updateSeed(long id, String seed) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_SEEDS_SEED, seed);
+        db.update(TABLE_SEEDS, values, KEY_SEEDS_QUIZ_ID + " = '" + Long.toString(id) + "'", null);
+        db.close();
+    }
 
-            } while (allRows.moveToNext());
-        }
-        allRows.close();
-        return tableString;
+    public void removeSeed(long id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_SEEDS, KEY_SEEDS_QUIZ_ID + " = " + Long.toString(id), null);
+        db.close();
     }
 }

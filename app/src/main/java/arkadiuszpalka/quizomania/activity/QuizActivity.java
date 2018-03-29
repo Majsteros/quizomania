@@ -15,11 +15,11 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import arkadiuszpalka.quizomania.R;
 import arkadiuszpalka.quizomania.handler.DatabaseHandler;
+import arkadiuszpalka.quizomania.handler.SeedHandler;
+
 import static arkadiuszpalka.quizomania.handler.DatabaseHandler.*;
 import static arkadiuszpalka.quizomania.adapter.QuizzesRecyclerViewAdapter.EXTRA_QUIZ_ID;
 
@@ -27,9 +27,15 @@ public class QuizActivity extends AppCompatActivity {
     public static final String EXTRA_QUESTION_ORDER = "arkadiuszpalka.quizomania.adapter.QUESTION_ORDER";
     public static final String EXTRA_QUESTION_COUNT = "arkadiuszpalka.quizomania.adapter.QUESTION_COUNT";
     public static final String EXTRA_QUIZ_SCORE = "arkadiuszpalka.quizomania.adapter.QUIZ_SCORE";
-    private static final String KEY_QUIZ_SCORE = "quiz_score";
+    public static final String KEY_QUIZ_SCORE = "quiz_score";
 
     private int questionOrder, questionCount, quizScore;
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(getApplicationContext(), QuizzesActivity.class));
+        finish();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,12 +57,10 @@ public class QuizActivity extends AppCompatActivity {
                 quizScore = extras.getIntExtra(EXTRA_QUIZ_SCORE, 0);
 
                 if (questionOrder == 1 && db.getCountOfSeedsById(quizId) == 0) {
-                    db.addSeed(quizId, generateSeed(questionOrder, 0));
+                    db.addSeed(quizId, SeedHandler.generateSeed(questionOrder, 0, false, 0));
                 } else {
-                    HashMap<String, String> state = readSeed(db.getSeed(quizId));
-                    Log.d("QUIZ", "questionOrder from seed = " + questionOrder);
+                    HashMap<String, String> state = SeedHandler.readSeed(db.getSeed(quizId));
                     questionOrder = Integer.parseInt(state.get(KEY_QUESTIONS_ORDER));
-                    Log.d("QUIZ", "quizScore from seed = " + quizScore);
                     quizScore = Integer.parseInt(state.get(KEY_QUIZ_SCORE));
                 }
                 questionCount = extras.getIntExtra(EXTRA_QUESTION_COUNT, 0);
@@ -68,7 +72,6 @@ public class QuizActivity extends AppCompatActivity {
 
                 if (questionCount == 0) {
                     questionCount = db.getCountOfQuestionsById(quizId);
-                    Log.d("QUIZ", "Setting question count");
                 }
 
                 progressBar.setProgress((int) ((questionOrder / (float) questionCount) * 100));
@@ -110,49 +113,30 @@ public class QuizActivity extends AppCompatActivity {
                 );
             }
         } else {
-            Toast.makeText(context, "Wystąpił nieznany błąd", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, context.getString(R.string.occurred_unknown_error), Toast.LENGTH_LONG).show();
             startActivity(new Intent(context, QuizzesActivity.class));
             finish();
         }
     }
+
     public void nextQuestion(Context context, DatabaseHandler db,long quizId, int questionCount, int questionOrder, int quizScore, boolean addScore) {
         if (questionOrder == questionCount) {
-            startActivity(new Intent(context, QuizzesActivity.class));
+            Intent intent = new Intent(context, SummaryActivity.class);
+            intent.putExtra(EXTRA_QUIZ_ID, quizId);
+            intent.putExtra(EXTRA_QUESTION_COUNT, questionCount);
+            intent.putExtra(EXTRA_QUIZ_SCORE, addScore ? ++quizScore : quizScore);
+            db.updateSeed(quizId, SeedHandler.generateSeed(questionOrder, quizScore, true, (int) ((quizScore / (float) questionCount) * 100)));
+            startActivity(intent);
             finish();
             return;
         }
-        Log.d("QUIZ", "Input\n order = " + questionOrder + " | quizScore = " + quizScore);
         Intent intent = new Intent(context, QuizActivity.class);
         intent.putExtra(EXTRA_QUIZ_ID, quizId);
         intent.putExtra(EXTRA_QUESTION_COUNT, questionCount);
         intent.putExtra(EXTRA_QUESTION_ORDER, ++questionOrder);
         intent.putExtra(EXTRA_QUIZ_SCORE, addScore ? ++quizScore : quizScore);
-        Log.d("QUIZ", "Input to update\n order = " + questionOrder + " | quizScore = " + quizScore);
-        db.updateSeed(quizId, generateSeed(questionOrder, quizScore));
+        db.updateSeed(quizId, SeedHandler.generateSeed(questionOrder, quizScore, false, (int) ((questionOrder / (float) questionCount) * 100)));
         startActivity(intent);
         finish();
     }
-
-    public String generateSeed(int order, int score) {
-        StringBuilder sb = new StringBuilder("o");
-        sb.append(order);
-        sb.append('s');
-        sb.append(score);
-        Log.d("QUIZ", "matcher is valid = " + Pattern.matches(":o[0-9]{1,4}s[0-9]{1,4}", sb.toString()));
-        Log.d("QUIZ", "matcher made = " + sb.toString());
-        return sb.toString();
-    }
-
-    public HashMap<String, String> readSeed(String seed) {
-        HashMap<String, String> state = new HashMap<>(2);
-        Pattern pattern = Pattern.compile("o([0-9]{1,4})s([0-9]{1,4})");
-        Matcher matcher = pattern.matcher(seed);
-        if (matcher.find()) {
-            state.put(KEY_QUESTIONS_ORDER, matcher.group(1));
-            state.put(KEY_QUIZ_SCORE, matcher.group(2));
-        }
-        Log.d("QUIZ", "readSeed\n o: " + state.get(KEY_QUESTIONS_ORDER) + " | s: " + state.get(KEY_QUIZ_SCORE) );
-        return state;
-    }
-
 }
