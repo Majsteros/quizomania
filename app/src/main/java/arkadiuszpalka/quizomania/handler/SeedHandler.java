@@ -1,7 +1,5 @@
 package arkadiuszpalka.quizomania.handler;
 
-import android.util.Log;
-
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,9 +12,7 @@ public class SeedHandler {
     public static final String KEY_QUIZ_PROGRESS = "progress";
 
     public static String generateSeed(int order, int score, boolean isSolved, int progress) {
-        String seed = "o" + order + 's' + score + 'e' + isSolved + 'p' + progress;
-        Log.d("SEED GENERATED", seed);
-        return seed;
+        return "o" + order + 's' + score + 'e' + isSolved + 'p' + progress;
     }
 
     public static HashMap<String, String> readSeed(String seed) {
@@ -29,7 +25,6 @@ public class SeedHandler {
             state.put(KEY_QUIZ_IS_SOLVED, matcher.group(3));
             state.put(KEY_QUIZ_PROGRESS, matcher.group(6));
         }
-        Log.d("SEED", "readSeed\nORDER: " + state.get(KEY_QUESTIONS_ORDER) + "\nSCORE: " + state.get(KEY_QUIZ_SCORE) + "\nIS_SOLVED: " + state.get(KEY_QUIZ_IS_SOLVED) + "\nPROGRESS: " + state.get(KEY_QUIZ_PROGRESS));
         return state;
     }
 }

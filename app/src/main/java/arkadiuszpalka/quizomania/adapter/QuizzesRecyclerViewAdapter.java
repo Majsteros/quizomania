@@ -63,7 +63,7 @@ public class QuizzesRecyclerViewAdapter extends RecyclerView.Adapter<QuizzesRecy
             return id;
         }
 
-        public boolean isSolved() {
+        private boolean isSolved() {
             return isSolved;
         }
 

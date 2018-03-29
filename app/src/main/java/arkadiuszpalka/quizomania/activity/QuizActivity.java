@@ -119,7 +119,7 @@ public class QuizActivity extends AppCompatActivity {
         }
     }
 
-    public void nextQuestion(Context context, DatabaseHandler db,long quizId, int questionCount, int questionOrder, int quizScore, boolean addScore) {
+    private void nextQuestion(Context context, DatabaseHandler db,long quizId, int questionCount, int questionOrder, int quizScore, boolean addScore) {
         if (questionOrder == questionCount) {
             Intent intent = new Intent(context, SummaryActivity.class);
             intent.putExtra(EXTRA_QUIZ_ID, quizId);

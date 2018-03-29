@@ -37,11 +37,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            long startTime = System.currentTimeMillis();
             ArrayList<Long> ids = getQuizzes();
             getQuestions(ids);
-            long stopTime = System.currentTimeMillis();
-            Log.d("MAIN", Long.toString(stopTime - startTime));
             onEnd();
         }
 

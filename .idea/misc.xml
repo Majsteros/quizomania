@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="EntryPointsManager">
+    <pattern value="arkadiuszpalka.quizomania.handler.DatabaseHandler" method="getQuizzesIds" />
+    <pattern value="arkadiuszpalka.quizomania.handler.DatabaseHandler" method="getQuestionIdByQuizId" />
+    <pattern value="arkadiuszpalka.quizomania.handler.DatabaseHandler" method="addQuestions" />
+    <pattern value="arkadiuszpalka.quizomania.handler.DatabaseHandler" />
+    <pattern value="arkadiuszpalka.quizomania.ExampleInstrumentedTest" method="useAppContext" />
+    <pattern value="arkadiuszpalka.quizomania.ExampleInstrumentedTest" />
+    <pattern value="arkadiuszpalka.quizomania.ExampleUnitTest" method="addition_isCorrect" />
+    <pattern value="arkadiuszpalka.quizomania.ExampleUnitTest" />
+    <pattern value="arkadiuszpalka.quizomania.activity.MainActivity" />
+    <pattern value="arkadiuszpalka.quizomania.activity.QuizActivity" />
+    <pattern value="arkadiuszpalka.quizomania.activity.QuizzesActivity" />
+    <pattern value="arkadiuszpalka.quizomania.activity.SummaryActivity" />
+  </component>
   <component name="NullableNotNullManager">
     <option name="myDefaultNullable" value="android.support.annotation.Nullable" />
     <option name="myDefaultNotNull" value="android.support.annotation.NonNull" />
