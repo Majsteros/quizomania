@@ -2,8 +2,6 @@
 
 Aplikacja do sprawdzania swojej wiedzy.
 
-Wykorzystuje dane API udostępnionego przez Wirtualna Polska Media.
-
 ---
 
 Copyright © 2018 Arkadiusz Pałka
