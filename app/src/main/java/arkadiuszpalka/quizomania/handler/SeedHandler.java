@@ -5,7 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static arkadiuszpalka.quizomania.activity.QuizActivity.KEY_QUIZ_SCORE;
-import static arkadiuszpalka.quizomania.handler.DatabaseHandler.KEY_QUESTIONS_ORDER;
+import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUESTIONS_ORDER;
 
 public class SeedHandler {
     public static final String KEY_QUIZ_IS_SOLVED = "is_solved";

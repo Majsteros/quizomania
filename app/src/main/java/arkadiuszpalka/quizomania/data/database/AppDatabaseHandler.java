@@ -1,4 +1,4 @@
-package arkadiuszpalka.quizomania.handler;
+package arkadiuszpalka.quizomania.data.database;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -11,8 +11,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeMap;
 
-public class DatabaseHandler extends SQLiteOpenHelper {
-    private static DatabaseHandler instance;
+public class AppDatabaseHandler extends SQLiteOpenHelper implements DatabaseHandler {
+
+    private static volatile AppDatabaseHandler instance;
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String DATABASE_NAME = "quizomania";
@@ -60,13 +61,19 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_SEEDS_QUIZ_ID = "quiz_id";
     private static final String KEY_SEEDS_SEED = "seed";
 
-    private DatabaseHandler(Context context) {
+    private AppDatabaseHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+
+        if (instance != null) {
+            throw new RuntimeException("Use getInstance() method to get the single instance of this class.");
+        }
     }
 
-    public static DatabaseHandler getInstance(Context context) {
+    public static AppDatabaseHandler getInstance(Context context) {
         if (instance == null) {
-            instance = new DatabaseHandler(context.getApplicationContext());
+            synchronized (AppDatabaseHandler.class) {
+                if (instance == null) instance = new AppDatabaseHandler(context.getApplicationContext());
+            }
         }
         return instance;
     }
@@ -129,6 +136,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    @Override
     public void addAnswers(ArrayList<HashMap<String, String>> answers) {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "INSERT INTO `"+ TABLE_ANSWERS +"`(`"+ KEY_ANSWERS_QUESTIONS_ID +"`,`"+ KEY_ANSWERS_IS_CORRECT +"`,`"+ KEY_ANSWERS_ORDER +"`,`"+ KEY_ANSWERS_TEXT +"`) VALUES(?,?,?,?);";
@@ -149,6 +157,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    @Override
     public void addSeed(long quizId, String seed) {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "INSERT INTO `"+ TABLE_SEEDS +"`(`"+ KEY_SEEDS_QUIZ_ID +"`,`"+ KEY_SEEDS_SEED +"`) VALUES(?,?);";
@@ -163,6 +172,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    @Override
     public void addQuestion(HashMap<String, String> question) {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "INSERT INTO `"+ TABLE_QUESTIONS +"`(`"+ KEY_QUESTIONS_QUIZ_ID +"`,`"+ KEY_QUESTIONS_TEXT +"`,`"+ KEY_QUESTIONS_ORDER +"`) VALUES(?,?,?);";
@@ -178,6 +188,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    @Override
     public void addQuestions(ArrayList<HashMap<String, String>> questions) {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "INSERT INTO `"+ TABLE_QUESTIONS +"`(`"+ KEY_QUESTIONS_QUIZ_ID +"`,`"+ KEY_QUESTIONS_TEXT +"`,`"+ KEY_QUESTIONS_ORDER +"`) VALUES(?,?,?);";
@@ -195,12 +206,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
-    public void addQuizzes(ArrayList<HashMap<String, String>> arrayList) {
+    @Override
+    public void addQuizzes(ArrayList<HashMap<String, String>> quizzes) {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "INSERT INTO `"+ TABLE_QUIZZES +"`(`"+ KEY_QUIZZES_ID +"`,`"+ KEY_QUIZZES_TITLE +"`,`"+ KEY_QUIZZES_CONTENT +"`,`"+ KEY_CATEGORIES_ID +"`) VALUES(?,?,?,?);";
         SQLiteStatement stmt = db.compileStatement(query);
         db.beginTransaction();
-        for (HashMap<String, String>  map : arrayList) {
+        for (HashMap<String, String>  map : quizzes) {
             stmt.bindString(1, map.get(KEY_QUIZZES_ID));
             stmt.bindString(2, map.get(KEY_QUIZZES_TITLE));
             stmt.bindString(3, map.get(KEY_QUIZZES_CONTENT));
@@ -213,6 +225,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    @Override
     public void addCategories(ArrayList<String> categories) {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "INSERT OR IGNORE INTO `"+ TABLE_CATEGORIES +"`(`"+ KEY_CATEGORIES_NAME +"`) VALUES(?);";
@@ -228,6 +241,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    @Override
     public int getQuestionIdByQuizId(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT `" + KEY_QUESTIONS_ID + "` FROM `" + TABLE_QUESTIONS + "` WHERE `" + KEY_QUESTIONS_QUIZ_ID + "` = '" + Long.toString(id) + "' LIMIT 1", null);
@@ -240,6 +254,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return value;
     }
 
+    @Override
     public int getQuestionIdByQuizIdOrder(long id, int order) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT `" + KEY_QUESTIONS_ID + "` FROM `" + TABLE_QUESTIONS + "` WHERE `" + KEY_QUESTIONS_QUIZ_ID + "` = '" + Long.toString(id) + "' AND `" + KEY_QUESTIONS_ORDER + "` = '" + Integer.toString(order) + "' LIMIT 1", null);
@@ -252,6 +267,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return value;
     }
 
+    @Override
     public HashMap<String, Object> getQuestionByQuizIdOrder(long id, int order) {
         HashMap<String, Object> question = new HashMap<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -266,6 +282,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return question;
     }
 
+    @Override
     public ArrayList<TreeMap<String, Object>> getAnswersByQuestionId(int id) {
         ArrayList<TreeMap<String, Object>> answers = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -282,6 +299,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return answers;
     }
 
+    @Override
     public String getSeed(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT `" + KEY_SEEDS_SEED + "` FROM `" + TABLE_SEEDS + "` WHERE `"+ KEY_SEEDS_QUIZ_ID +"` = '"+ id + "' LIMIT 1", null);
@@ -294,6 +312,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return value;
     }
 
+    @Override
     public ArrayList<HashMap<String, String>> getQuizzes() {
         ArrayList<HashMap<String, String>> quizzes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -309,6 +328,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return quizzes;
     }
 
+    @Override
     public ArrayList<Long> getQuizzesIds() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(TABLE_QUIZZES, new String[] {KEY_QUIZZES_ID}, null, null, null, null, null);
@@ -321,6 +341,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return ids;
     }
 
+    @Override
     public int getCategoryIdByName(String name) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT `" + KEY_CATEGORIES_ID + "` FROM `" + TABLE_CATEGORIES + "` WHERE `"+ KEY_CATEGORIES_NAME +"` = '"+ name + "' LIMIT 1", null);
@@ -333,6 +354,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return value;
     }
 
+    @Override
     public int getCountOfQuestionsById(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_QUESTIONS + "` WHERE `" + KEY_QUESTIONS_QUIZ_ID + "` = '"+ Long.toString(id) +"'", null);
@@ -345,6 +367,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return value;
     }
 
+    @Override
     public int getCountOfQuizzesById(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_QUIZZES + "` WHERE `" + KEY_QUIZZES_ID + "` = '"+ Long.toString(id) +"'", null);
@@ -357,6 +380,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return value;
     }
 
+    @Override
     public int getCountOfSeedsById(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_SEEDS + "` WHERE `" + KEY_SEEDS_QUIZ_ID + "` = '"+ Long.toString(id) +"'", null);
@@ -369,6 +393,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return value;
     }
 
+    @Override
     public void updateSeed(long id, String seed) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -377,6 +402,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    @Override
     public void removeSeed(long id) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_SEEDS, KEY_SEEDS_QUIZ_ID + " = " + Long.toString(id), null);

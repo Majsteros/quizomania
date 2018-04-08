@@ -11,7 +11,7 @@ import android.widget.Toast;
 import java.util.Locale;
 
 import arkadiuszpalka.quizomania.R;
-import arkadiuszpalka.quizomania.handler.DatabaseHandler;
+import arkadiuszpalka.quizomania.data.database.AppDatabaseHandler;
 
 import static arkadiuszpalka.quizomania.activity.QuizActivity.EXTRA_QUESTION_COUNT;
 import static arkadiuszpalka.quizomania.activity.QuizActivity.EXTRA_QUIZ_SCORE;
@@ -56,7 +56,7 @@ public class SummaryActivity extends AppCompatActivity {
         findViewById(R.id.button_start_again).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                DatabaseHandler.getInstance(context.getApplicationContext()).removeSeed(quizId);
+                AppDatabaseHandler.getInstance(context.getApplicationContext()).removeSeed(quizId);
                 Intent intent = new Intent(context, QuizActivity.class);
                 intent.putExtra(EXTRA_QUIZ_ID, quizId);
                 startActivity(intent);

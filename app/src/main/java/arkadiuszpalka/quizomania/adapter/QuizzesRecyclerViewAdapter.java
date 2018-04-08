@@ -15,10 +15,10 @@ import java.util.Locale;
 
 import arkadiuszpalka.quizomania.R;
 import arkadiuszpalka.quizomania.activity.QuizActivity;
-import arkadiuszpalka.quizomania.handler.DatabaseHandler;
+import arkadiuszpalka.quizomania.data.database.AppDatabaseHandler;
 import arkadiuszpalka.quizomania.handler.SeedHandler;
 
-import static arkadiuszpalka.quizomania.handler.DatabaseHandler.*;
+import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.*;
 import static arkadiuszpalka.quizomania.handler.SeedHandler.*;
 
 public class QuizzesRecyclerViewAdapter extends RecyclerView.Adapter<QuizzesRecyclerViewAdapter.ViewHolder> {
@@ -43,7 +43,7 @@ public class QuizzesRecyclerViewAdapter extends RecyclerView.Adapter<QuizzesRecy
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    DatabaseHandler db = DatabaseHandler.getInstance(context);
+                    AppDatabaseHandler db = AppDatabaseHandler.getInstance(context);
                     HashMap<String, String> state = SeedHandler.readSeed(db.getSeed(id));
                     isSolved = Boolean.parseBoolean(state.get(KEY_QUIZ_IS_SOLVED));
                     Log.d("TEST", "isSolved: " + isSolved);
@@ -84,7 +84,7 @@ public class QuizzesRecyclerViewAdapter extends RecyclerView.Adapter<QuizzesRecy
 
         Context context = holder.getContext();
         HashMap<String, String> state = SeedHandler.readSeed(
-                DatabaseHandler.getInstance(context)
+                AppDatabaseHandler.getInstance(context)
                         .getSeed(holder.getId()));
         if (state.get(KEY_QUIZ_PROGRESS) != null) {
             int progress = Integer.parseInt(state.get(KEY_QUIZ_PROGRESS));

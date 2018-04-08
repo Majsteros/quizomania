@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -17,10 +16,10 @@ import java.util.HashMap;
 import java.util.TreeMap;
 
 import arkadiuszpalka.quizomania.R;
-import arkadiuszpalka.quizomania.handler.DatabaseHandler;
+import arkadiuszpalka.quizomania.data.database.AppDatabaseHandler;
 import arkadiuszpalka.quizomania.handler.SeedHandler;
 
-import static arkadiuszpalka.quizomania.handler.DatabaseHandler.*;
+import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.*;
 import static arkadiuszpalka.quizomania.adapter.QuizzesRecyclerViewAdapter.EXTRA_QUIZ_ID;
 
 public class QuizActivity extends AppCompatActivity {
@@ -47,7 +46,7 @@ public class QuizActivity extends AppCompatActivity {
         RadioGroup radioGroup = findViewById(R.id.radiogroup_quiz_answers);
 
         final Context context = getApplicationContext();
-        final DatabaseHandler db = DatabaseHandler.getInstance(context);
+        final AppDatabaseHandler db = AppDatabaseHandler.getInstance(context);
 
         final Intent extras = getIntent();
         if (extras != null) {
@@ -112,7 +111,7 @@ public class QuizActivity extends AppCompatActivity {
         }
     }
 
-    private void nextQuestion(Context context, DatabaseHandler db,long quizId, int questionCount, int questionOrder, int quizScore, boolean addScore) {
+    private void nextQuestion(Context context, AppDatabaseHandler db, long quizId, int questionCount, int questionOrder, int quizScore, boolean addScore) {
         if (questionOrder == questionCount) {
             Intent intent = new Intent(context, SummaryActivity.class);
             intent.putExtra(EXTRA_QUIZ_ID, quizId);

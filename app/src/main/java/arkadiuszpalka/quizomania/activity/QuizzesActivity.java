@@ -7,7 +7,7 @@ import android.support.v7.widget.RecyclerView;
 
 import arkadiuszpalka.quizomania.R;
 import arkadiuszpalka.quizomania.adapter.QuizzesRecyclerViewAdapter;
-import arkadiuszpalka.quizomania.handler.DatabaseHandler;
+import arkadiuszpalka.quizomania.data.database.AppDatabaseHandler;
 
 
 public class QuizzesActivity extends AppCompatActivity {
@@ -20,7 +20,7 @@ public class QuizzesActivity extends AppCompatActivity {
         RecyclerView.LayoutManager layoutManagerRecyclerView = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManagerRecyclerView);
         RecyclerView.Adapter recyclerViewAdapter = new QuizzesRecyclerViewAdapter(
-                DatabaseHandler.getInstance(getApplicationContext())
+                AppDatabaseHandler.getInstance(getApplicationContext())
                         .getQuizzes()
         );
         recyclerView.setAdapter(recyclerViewAdapter);

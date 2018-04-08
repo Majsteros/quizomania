@@ -1,4 +1,4 @@
-package arkadiuszpalka.quizomania.handler;
+package arkadiuszpalka.quizomania.data.network;
 
 import java.io.IOException;
 
@@ -6,7 +6,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class HttpHandler {
+class HttpHandler {
     private OkHttpClient okHttpClient = new OkHttpClient();
 
     public String request(String url) throws IOException {
