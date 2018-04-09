@@ -16,6 +16,6 @@ Wszelkie prawa zastrzeżone.
 
 1. Wprowadzenie struktury MVP
 2. Wersjonowanie buildów
-3. Thread safety dla bazy danych
+3. ~~Thread safety dla bazy danych~~
 4. Konfiguracja Android Lint
 5. Testy
