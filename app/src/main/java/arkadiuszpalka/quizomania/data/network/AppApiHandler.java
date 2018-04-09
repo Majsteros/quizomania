@@ -9,11 +9,10 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-
+//TODO optimize imports
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_ANSWERS_IS_CORRECT;
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_ANSWERS_ORDER;
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_ANSWERS_TEXT;
-import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_CATEGORIES_ID;
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_CATEGORIES_NAME;
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUESTIONS_ID;
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUESTIONS_ORDER;
@@ -23,7 +22,7 @@ import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUI
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUIZZES_ID;
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUIZZES_TITLE;
 
-class AppApiHandler implements ApiHandler {
+public class AppApiHandler implements ApiHandler {
 
     private static volatile AppApiHandler instance;
 
@@ -43,108 +42,101 @@ class AppApiHandler implements ApiHandler {
     }
 
     @Override
-    public ArrayList<Long> downloadQuizzes() {
-        String result = null;
+    public String request(String url) {
+        String result = "";
         try {
-            result = new HttpHandler().request("http://quiz.o2.pl/api/v1/quizzes/0/100");
+            result = new HttpHandler().request(url);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (result != null) {
+        return result;
+    }
+
+    @Override
+    public ArrayList<Long> checkNewQuizzes(ArrayList<Long> dbIds, String apiResult) {
+        ArrayList<Long> apiIds = new ArrayList<>();
+        try {
+            JSONArray items = new JSONObject(apiResult).getJSONArray("items");
+            for (int i = 0; i < items.length(); i++) {
+                JSONObject jsonObject = items.getJSONObject(i);
+                long quizId = (long) jsonObject.get("id");
+                apiIds.add(quizId);
+            }
+            for (long dbId : dbIds) {
+                for (long apiId : apiIds) {
+                    if (dbId == apiId) {
+                        apiIds.remove(apiId);
+                    }
+                }
+            }
+            return apiIds;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return apiIds;
+    }
+
+    @Override
+    public ArrayList<HashMap<String, String>> downloadQuizzes(ArrayList<Long> apiIds, String apiResult) {
             ArrayList<HashMap<String, String>> quizzesList = new ArrayList<>();
-            ArrayList<String> categoriesList = new ArrayList<>();
-            ArrayList<Long> ids = new ArrayList<>();
             try {
-                JSONArray items = new JSONObject(result).getJSONArray("items");
+                JSONArray items = new JSONObject(apiResult).getJSONArray("items");
                 for (int i = 0; i < items.length(); i++) {
                     JSONObject jsonObject = items.getJSONObject(i);
-                    String categoryName = jsonObject.getJSONArray("categories")
-                            .getJSONObject(0)
-                            .getString("name");
                     long quizId = (long) jsonObject.get("id");
-                    String quizTitle = jsonObject.getString("title");
-                    String quizContent = jsonObject.getString("content");
+                    for (long apiId : apiIds) {
+                        if (apiId == quizId) {
+                            String quizTitle = jsonObject.getString("title");
+                            String quizContent = jsonObject.getString("content");
+                            String categoryName = jsonObject.getJSONArray("categories")
+                                    .getJSONObject(0)
+                                    .getString("name");
 
-                    if (db.getCountOfQuizzesById(quizId) == 0) {
-                        HashMap<String, String> quiz = new HashMap<>();
-                        quiz.put(KEY_QUIZZES_ID, Long.toString(quizId));
-                        quiz.put(KEY_QUIZZES_TITLE, quizTitle);
-                        quiz.put(KEY_QUIZZES_CONTENT, quizContent);
-                        quiz.put(KEY_CATEGORIES_NAME, categoryName);
+                            HashMap<String, String> quiz = new HashMap<>();
+                            quiz.put(KEY_QUIZZES_ID, Long.toString(quizId));
+                            quiz.put(KEY_QUIZZES_TITLE, quizTitle);
+                            quiz.put(KEY_QUIZZES_CONTENT, quizContent);
+                            quiz.put(KEY_CATEGORIES_NAME, categoryName);
 
-                        categoriesList.add(categoryName);
-                        quizzesList.add(quiz);
-                        ids.add(quizId);
+                            quizzesList.add(quiz);
+                        }
                     }
                 }
-                if (categoriesList.size() > 0) {
-                    db.addCategories(categoriesList);
-                }
-                if (quizzesList.size() > 0) {
-                    for (HashMap<String, String> map : quizzesList) {
-                        map.put(KEY_CATEGORIES_ID,
-                                Integer.toString(
-                                        db.getCategoryIdByName(
-                                                map.get(KEY_CATEGORIES_NAME))));
-                    }
-                    db.addQuizzes(quizzesList);
-                }
+                return quizzesList;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             Log.d("MAIN", "Quizzes was inserted");
-            return ids;
-        } else {
-            return new ArrayList<>();
-        }
+        return quizzesList;
     }
 
     @Override
-    public void downloadQuestions(ArrayList<Long> ids) {
+    public ArrayList<HashMap<String, String>> downloadQuestions(ArrayList<Long> ids) {
+        ArrayList<HashMap<String, String>> questionsList = new ArrayList<>();
+
         if (ids.size() > 0) {
             Log.d("MAIN", "Inserting "+ ids.size() +" questions");
+
             for (Long id : ids) {
                 try {
                     String result = new HttpHandler().request("http://quiz.o2.pl/api/v1/quiz/" + id + "/0");
-                    if (result != null) {
+
+                    if (result != null && result.length() > 0) {
                         JSONObject jsonObject = new JSONObject(result);
                         long quizId = (long) jsonObject.get("id");
                         JSONArray questions = jsonObject.getJSONArray("questions");
+
                         for (int i = 0; i < questions.length(); i++) {
-                            ArrayList<HashMap<String, String>> answersList = new ArrayList<>();
                             JSONObject question = questions.getJSONObject(i);
-                            JSONArray answers = question.getJSONArray("answers");
                             String questionText = question.getString("text");
                             int questionOrder = question.getInt("order");
 
                             HashMap<String, String> questionHashMap = new HashMap<>();
-
                             questionHashMap.put(KEY_QUESTIONS_QUIZ_ID, Long.toString(quizId));
                             questionHashMap.put(KEY_QUESTIONS_TEXT, questionText);
                             questionHashMap.put(KEY_QUESTIONS_ORDER, Integer.toString(questionOrder));
 
-
-                            db.addQuestion(questionHashMap);
-                            int questionId = db.getQuestionIdByQuizIdOrder(quizId, questionOrder);
-                            for (int j = 0; j < answers.length(); j++) {
-                                HashMap<String, String> answersHashMap = new HashMap<>();
-                                JSONObject answer = answers.getJSONObject(j);
-                                int answerOrder = answer.getInt("order");
-                                String answerText = answer.getString("text");
-                                if (answer.has("isCorrect")) {
-                                    answersHashMap.put(KEY_ANSWERS_IS_CORRECT, Integer.toString(
-                                            answer.getInt("isCorrect")
-                                    ));
-                                }
-                                answersHashMap.put(KEY_ANSWERS_ORDER, Integer.toString(answerOrder));
-                                answersHashMap.put(KEY_ANSWERS_TEXT, answerText);
-                                answersHashMap.put(KEY_QUESTIONS_ID, Integer.toString(questionId));
-
-                                answersList.add(answersHashMap);
-                            }
-                            if (answersList.size() > 0) {
-                                db.addAnswers(answersList);
-                            }
+                            questionsList.add(questionHashMap);
                         }
                     }
                 } catch (JSONException e) {
@@ -155,5 +147,47 @@ class AppApiHandler implements ApiHandler {
             }
             Log.d("MAIN", "Questions was inserted");
         } else Log.d("MAIN", "0 questions was inserted");
+        return questionsList;
+    }
+
+    @Override
+    public ArrayList<HashMap<String, String>> downloadAnswers(long quizId, int questionId, int questionOrder) {
+        ArrayList<HashMap<String, String>> answersList = new ArrayList<>();
+        try {
+            String result = new HttpHandler().request("http://quiz.o2.pl/api/v1/quiz/" + Long.toString(quizId) + "/0");
+
+            if (result != null && result.length() > 0) {
+                JSONObject jsonObject = new JSONObject(result);
+                JSONArray questions = jsonObject.getJSONArray("questions");
+                JSONObject question = questions.getJSONObject(questions.length() - 1);
+
+                if (question.optInt("order") == questionOrder) {
+                    JSONArray answers = question.getJSONArray("answers");
+
+                    for (int j = 0; j < answers.length(); j++) {
+                        HashMap<String, String> answersHashMap = new HashMap<>();
+                        JSONObject answer = answers.getJSONObject(j);
+
+                        int answerOrder = answer.getInt("order");
+                        String answerText = answer.getString("text");
+                        if (answer.has("isCorrect")) {
+                            answersHashMap.put(KEY_ANSWERS_IS_CORRECT,
+                                    Integer.toString(answer.getInt("isCorrect")));
+                        }
+
+                        answersHashMap.put(KEY_ANSWERS_ORDER, Integer.toString(answerOrder));
+                        answersHashMap.put(KEY_ANSWERS_TEXT, answerText);
+                        answersHashMap.put(KEY_QUESTIONS_ID, Integer.toString(questionId));
+
+                        answersList.add(answersHashMap);
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return answersList;
     }
 }

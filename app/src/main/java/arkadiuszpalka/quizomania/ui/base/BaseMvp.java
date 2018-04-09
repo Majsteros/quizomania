@@ -16,6 +16,7 @@ public interface BaseMvp {
         void showMessage(int resId);
 
         boolean isNetworkConnected();
+
     }
 
     interface Presenter<V extends View>{

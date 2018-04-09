@@ -3,7 +3,7 @@ package arkadiuszpalka.quizomania.ui.base;
 
 import arkadiuszpalka.quizomania.data.DataManager;
 
-public abstract class BasePresenter<V extends BaseMvp.View> implements BaseMvp.Presenter<V> {
+public class BasePresenter<V extends BaseMvp.View> implements BaseMvp.Presenter<V> {
 
     private final DataManager dataManager;
     private V activityView;

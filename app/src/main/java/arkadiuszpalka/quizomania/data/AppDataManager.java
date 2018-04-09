@@ -11,6 +11,11 @@ import arkadiuszpalka.quizomania.data.database.DatabaseHandler;
 import arkadiuszpalka.quizomania.data.network.ApiHandler;
 import arkadiuszpalka.quizomania.data.network.AppApiHandler;
 
+import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_CATEGORIES_ID;
+import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_CATEGORIES_NAME;
+import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUESTIONS_ORDER;
+import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUESTIONS_QUIZ_ID;
+
 public class AppDataManager implements DataManager {
 
     private static volatile AppDataManager instance;
@@ -138,21 +143,58 @@ public class AppDataManager implements DataManager {
     }
 
     @Override
-    public ArrayList<Long> downloadQuizzes() {
-        return apiHandler.downloadQuizzes();
+    public ArrayList<Long> checkNewQuizzes(ArrayList<Long> dbIds, String apiResult) {
+        return apiHandler.checkNewQuizzes(dbIds, apiResult);
     }
 
     @Override
-    public void downloadQuestions(ArrayList<Long> ids) {
-        apiHandler.downloadQuestions(ids);
+    public String request(String url) {
+        return apiHandler.request(url);
+    }
+
+    @Override
+    public ArrayList<HashMap<String, String>> downloadQuizzes(ArrayList<Long> apiIds, String apiResult) {
+       return apiHandler.downloadQuizzes(apiIds, apiResult);
+    }
+
+    @Override
+    public ArrayList<HashMap<String, String>> downloadQuestions(ArrayList<Long> ids) {
+        return apiHandler.downloadQuestions(ids);
+    }
+
+    @Override
+    public ArrayList<HashMap<String, String>> downloadAnswers(long quizId, int questionId, int questionOrder) {
+        return apiHandler.downloadAnswers(quizId, questionId, questionOrder);
     }
 
     public void syncApiData() {
         new Runnable() {
             @Override
             public void run() {
-                ArrayList<Long> ids = downloadQuizzes();
-                downloadQuestions(ids);
+                String request = request("http://quiz.o2.pl/api/v1/quizzes/0/100");
+                ArrayList<Long> apiIds = checkNewQuizzes(getQuizzesIds(),
+                        request);
+                ArrayList<HashMap<String, String>> quizzes = downloadQuizzes(apiIds,
+                        request);
+                if (quizzes.size() > 0) {
+                    ArrayList<String> categories = new ArrayList<>();
+                    for (HashMap<String, String> quiz : quizzes) {
+                        categories.add(quiz.get(KEY_CATEGORIES_NAME));
+                    }
+                    addCategories(categories);
+                    for (HashMap<String, String> quiz : quizzes) {
+                        quiz.put(KEY_CATEGORIES_ID,
+                                Integer.toString(getCategoryIdByName(quiz.get(KEY_CATEGORIES_NAME))));
+                    }
+                    addQuizzes(quizzes);
+                }
+                ArrayList<HashMap<String, String>> questions = downloadQuestions(apiIds);
+                for (HashMap<String, String> map : questions) {
+                    long quizId = Long.parseLong(map.get(KEY_QUESTIONS_QUIZ_ID));
+                    int questionOrder = Integer.parseInt(map.get(KEY_QUESTIONS_ORDER));
+                    int questionId = getQuestionIdByQuizIdOrder(quizId, questionOrder);
+                    downloadAnswers(quizId, questionId, questionOrder);
+                }
             }
         };
     }
