@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static arkadiuszpalka.quizomania.activity.QuizActivity.KEY_QUIZ_SCORE;
+import static arkadiuszpalka.quizomania.ui.quiz.QuizActivity.KEY_QUIZ_SCORE;
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUESTIONS_ORDER;
 
 public class SeedHandler {

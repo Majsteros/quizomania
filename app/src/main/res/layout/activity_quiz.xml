@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="arkadiuszpalka.quizomania.activity.QuizActivity"
+    tools:context="arkadiuszpalka.quizomania.ui.quiz.QuizActivity"
     tools:layout_editor_absoluteY="25dp">
 
     <TextView

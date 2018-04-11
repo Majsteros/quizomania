@@ -1,6 +1,7 @@
 package arkadiuszpalka.quizomania.data;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import arkadiuszpalka.quizomania.data.database.AppDatabaseHandler;
 import arkadiuszpalka.quizomania.data.database.DatabaseHandler;
 import arkadiuszpalka.quizomania.data.network.ApiHandler;
 import arkadiuszpalka.quizomania.data.network.AppApiHandler;
+import arkadiuszpalka.quizomania.ui.splash.SplashPresenter;
 
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_CATEGORIES_ID;
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_CATEGORIES_NAME;
@@ -17,6 +19,8 @@ import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUE
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUESTIONS_QUIZ_ID;
 
 public class AppDataManager implements DataManager {
+
+    public static final String TAG = "AppDataManager";
 
     private static volatile AppDataManager instance;
     private final DatabaseHandler dbHandler;
@@ -167,11 +171,12 @@ public class AppDataManager implements DataManager {
         return apiHandler.downloadAnswers(quizId, questionId, questionOrder);
     }
 
-    public void syncApiData() {
-        new Runnable() {
+    public void syncApiData(final SplashPresenter presenter) {
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                String request = request("http://quiz.o2.pl/api/v1/quizzes/0/100");
+                Log.i(TAG, "syncing started...");
+                String request = request("http://quiz.o2.pl/api/v1/quizzes/0/30");
                 ArrayList<Long> apiIds = checkNewQuizzes(getQuizzesIds(),
                         request);
                 ArrayList<HashMap<String, String>> quizzes = downloadQuizzes(apiIds,
@@ -189,13 +194,19 @@ public class AppDataManager implements DataManager {
                     addQuizzes(quizzes);
                 }
                 ArrayList<HashMap<String, String>> questions = downloadQuestions(apiIds);
+                addQuestions(questions);
                 for (HashMap<String, String> map : questions) {
                     long quizId = Long.parseLong(map.get(KEY_QUESTIONS_QUIZ_ID));
                     int questionOrder = Integer.parseInt(map.get(KEY_QUESTIONS_ORDER));
                     int questionId = getQuestionIdByQuizIdOrder(quizId, questionOrder);
-                    downloadAnswers(quizId, questionId, questionOrder);
+                    Log.d(TAG, "downloading answers for quiz ID: " + quizId + "\nquestion ID: " + questionId);
+                    addAnswers(downloadAnswers(quizId,
+                                            questionId,
+                                            questionOrder));
                 }
+                Log.i(TAG, "syncing was finished...");
+                presenter.onSuccessUpdate();
             }
-        };
+        }).start();
     }
 }

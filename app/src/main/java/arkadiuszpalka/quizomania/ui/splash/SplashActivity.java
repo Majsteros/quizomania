@@ -7,7 +7,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import arkadiuszpalka.quizomania.R;
-import arkadiuszpalka.quizomania.activity.QuizzesActivity;
+import arkadiuszpalka.quizomania.ui.quizzes.QuizzesActivity;
+import arkadiuszpalka.quizomania.data.AppDataManager;
 import arkadiuszpalka.quizomania.ui.base.BaseActivity;
 
 
@@ -15,7 +16,7 @@ public class SplashActivity extends BaseActivity implements SplashMvp.View {
 
     private TextView stateText;
     private ProgressBar progressBar;
-    private SplashPresenter<SplashMvp.View> presenter;
+    SplashPresenter<SplashMvp.View> presenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,8 +25,15 @@ public class SplashActivity extends BaseActivity implements SplashMvp.View {
         stateText = findViewById(R.id.text_splash_state);
         progressBar = findViewById(R.id.progressBar_splash);
 
-        presenter.onAttach(SplashActivity.this);
+        presenter = new SplashPresenter<>(AppDataManager.getInstance(getApplicationContext()));
+        presenter.onAttach(this);
         presenter.doUpdateDatabase();
+    }
+
+    @Override
+    protected void onDestroy() {
+        presenter.onDetach();
+        super.onDestroy();
     }
 
     @Override
@@ -39,6 +47,12 @@ public class SplashActivity extends BaseActivity implements SplashMvp.View {
     }
 
     @Override
+    public void openQuizzesActivity() {
+        startActivity(new Intent(this, QuizzesActivity.class));
+        finish();
+    }
+
+    @Override
     public void showProgress() {
         progressBar.setVisibility(View.VISIBLE);
     }
@@ -46,11 +60,5 @@ public class SplashActivity extends BaseActivity implements SplashMvp.View {
     @Override
     public void hideProgress() {
         progressBar.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void openQuizzesActivity() {
-        startActivity(new Intent(this, QuizzesActivity.class));
-        finish();
     }
 }

@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Locale;
 
 import arkadiuszpalka.quizomania.R;
-import arkadiuszpalka.quizomania.activity.QuizActivity;
+import arkadiuszpalka.quizomania.ui.quiz.QuizActivity;
 import arkadiuszpalka.quizomania.data.database.AppDatabaseHandler;
 import arkadiuszpalka.quizomania.handler.SeedHandler;
 

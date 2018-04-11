@@ -1,23 +1,27 @@
 package arkadiuszpalka.quizomania.ui.base;
 
 
-import arkadiuszpalka.quizomania.data.DataManager;
+import arkadiuszpalka.quizomania.data.AppDataManager;
 
 public class BasePresenter<V extends BaseMvp.View> implements BaseMvp.Presenter<V> {
 
-    private final DataManager dataManager;
+    private final AppDataManager appDataManager;
     private V activityView;
 
-    protected BasePresenter(DataManager dataManager) {
-        this.dataManager = dataManager;
+    public BasePresenter(AppDataManager dataManager) {
+        this.appDataManager = dataManager;
     }
 
-    public DataManager getDataManager() {
-        return dataManager;
+    public AppDataManager getAppDataManager() {
+        return appDataManager;
     }
 
     public V getActivityView() {
         return activityView;
+    }
+
+    public boolean isViewAttached() {
+        return activityView != null;
     }
 
     @Override

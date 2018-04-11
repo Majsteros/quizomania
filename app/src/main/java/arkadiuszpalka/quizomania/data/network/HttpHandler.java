@@ -1,6 +1,7 @@
 package arkadiuszpalka.quizomania.data.network;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

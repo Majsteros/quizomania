@@ -1,4 +1,4 @@
-package arkadiuszpalka.quizomania.activity;
+package arkadiuszpalka.quizomania.ui.quiz;
 
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.TreeMap;
 
 import arkadiuszpalka.quizomania.R;
+import arkadiuszpalka.quizomania.ui.quizzes.QuizzesActivity;
+import arkadiuszpalka.quizomania.ui.summary.SummaryActivity;
 import arkadiuszpalka.quizomania.data.database.AppDatabaseHandler;
 import arkadiuszpalka.quizomania.handler.SeedHandler;
 

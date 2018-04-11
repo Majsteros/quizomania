@@ -1,4 +1,4 @@
-package arkadiuszpalka.quizomania.activity;
+package arkadiuszpalka.quizomania.ui.quizzes;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;

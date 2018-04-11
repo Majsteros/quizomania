@@ -1,12 +1,12 @@
 package arkadiuszpalka.quizomania.ui.splash;
 
-import arkadiuszpalka.quizomania.data.DataManager;
+import arkadiuszpalka.quizomania.data.AppDataManager;
 import arkadiuszpalka.quizomania.ui.base.BasePresenter;
 
 public class SplashPresenter<V extends SplashMvp.View> extends BasePresenter<V> implements SplashMvp.Presenter<V> {
 
-    SplashPresenter(DataManager dataManager) {
-        super(dataManager);
+    public SplashPresenter(AppDataManager appDataManager) {
+        super(appDataManager);
     }
 
     @Override
@@ -21,6 +21,6 @@ public class SplashPresenter<V extends SplashMvp.View> extends BasePresenter<V> 
 
     @Override
     public void doUpdateDatabase() {
-        getDataManager().syncApiData();
+        getAppDataManager().syncApiData(SplashPresenter.this);
     }
 }

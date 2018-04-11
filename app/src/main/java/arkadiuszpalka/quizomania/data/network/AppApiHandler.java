@@ -24,6 +24,7 @@ import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUI
 
 public class AppApiHandler implements ApiHandler {
 
+    private static final String TAG = "AppApiHandler";
     private static volatile AppApiHandler instance;
 
     private AppApiHandler() {
@@ -62,13 +63,15 @@ public class AppApiHandler implements ApiHandler {
                 long quizId = (long) jsonObject.get("id");
                 apiIds.add(quizId);
             }
+            ArrayList<Long> toRemove = new ArrayList<>();
             for (long dbId : dbIds) {
                 for (long apiId : apiIds) {
                     if (dbId == apiId) {
-                        apiIds.remove(apiId);
+                        toRemove.add(apiId);
                     }
                 }
             }
+            apiIds.removeAll(toRemove);
             return apiIds;
         } catch (JSONException e) {
             e.printStackTrace();
@@ -115,7 +118,7 @@ public class AppApiHandler implements ApiHandler {
         ArrayList<HashMap<String, String>> questionsList = new ArrayList<>();
 
         if (ids.size() > 0) {
-            Log.d("MAIN", "Inserting "+ ids.size() +" questions");
+            Log.d(TAG, "Inserting "+ ids.size() +" questions");
 
             for (Long id : ids) {
                 try {
@@ -135,7 +138,6 @@ public class AppApiHandler implements ApiHandler {
                             questionHashMap.put(KEY_QUESTIONS_QUIZ_ID, Long.toString(quizId));
                             questionHashMap.put(KEY_QUESTIONS_TEXT, questionText);
                             questionHashMap.put(KEY_QUESTIONS_ORDER, Integer.toString(questionOrder));
-
                             questionsList.add(questionHashMap);
                         }
                     }
@@ -145,8 +147,8 @@ public class AppApiHandler implements ApiHandler {
                     e.printStackTrace();
                 }
             }
-            Log.d("MAIN", "Questions was inserted");
-        } else Log.d("MAIN", "0 questions was inserted");
+            Log.d(TAG, "Questions was inserted");
+        } else Log.d(TAG, "0 questions was inserted");
         return questionsList;
     }
 
@@ -159,7 +161,7 @@ public class AppApiHandler implements ApiHandler {
             if (result != null && result.length() > 0) {
                 JSONObject jsonObject = new JSONObject(result);
                 JSONArray questions = jsonObject.getJSONArray("questions");
-                JSONObject question = questions.getJSONObject(questions.length() - 1);
+                JSONObject question = questions.getJSONObject(questionOrder - 1);
 
                 if (question.optInt("order") == questionOrder) {
                     JSONArray answers = question.getJSONArray("answers");

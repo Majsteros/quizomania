@@ -1,4 +1,4 @@
-package arkadiuszpalka.quizomania.activity;
+package arkadiuszpalka.quizomania.ui.summary;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,9 +12,11 @@ import java.util.Locale;
 
 import arkadiuszpalka.quizomania.R;
 import arkadiuszpalka.quizomania.data.database.AppDatabaseHandler;
+import arkadiuszpalka.quizomania.ui.quiz.QuizActivity;
+import arkadiuszpalka.quizomania.ui.quizzes.QuizzesActivity;
 
-import static arkadiuszpalka.quizomania.activity.QuizActivity.EXTRA_QUESTION_COUNT;
-import static arkadiuszpalka.quizomania.activity.QuizActivity.EXTRA_QUIZ_SCORE;
+import static arkadiuszpalka.quizomania.ui.quiz.QuizActivity.EXTRA_QUESTION_COUNT;
+import static arkadiuszpalka.quizomania.ui.quiz.QuizActivity.EXTRA_QUIZ_SCORE;
 import static arkadiuszpalka.quizomania.adapter.QuizzesRecyclerViewAdapter.EXTRA_QUIZ_ID;
 
 public class SummaryActivity extends AppCompatActivity {
