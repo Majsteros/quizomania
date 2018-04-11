@@ -19,10 +19,10 @@ import arkadiuszpalka.quizomania.R;
 import arkadiuszpalka.quizomania.ui.quizzes.QuizzesActivity;
 import arkadiuszpalka.quizomania.ui.summary.SummaryActivity;
 import arkadiuszpalka.quizomania.data.database.AppDatabaseHandler;
-import arkadiuszpalka.quizomania.handler.SeedHandler;
+import arkadiuszpalka.quizomania.utils.SeedHandler;
 
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.*;
-import static arkadiuszpalka.quizomania.adapter.QuizzesRecyclerViewAdapter.EXTRA_QUIZ_ID;
+import static arkadiuszpalka.quizomania.ui.quizzes.QuizzesRecyclerAdapter.EXTRA_QUIZ_ID;
 
 public class QuizActivity extends AppCompatActivity {
     public static final String EXTRA_QUESTION_ORDER = "arkadiuszpalka.quizomania.adapter.QUESTION_ORDER";
@@ -111,6 +111,10 @@ public class QuizActivity extends AppCompatActivity {
             startActivity(new Intent(context, QuizzesActivity.class));
             finish();
         }
+    }
+
+    public static Intent getStartIntent(Context context) {
+        return new Intent(context, QuizActivity.class);
     }
 
     private void nextQuestion(Context context, AppDatabaseHandler db, long quizId, int questionCount, int questionOrder, int quizScore, boolean addScore) {

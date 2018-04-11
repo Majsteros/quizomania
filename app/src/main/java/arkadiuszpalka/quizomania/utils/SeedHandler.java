@@ -1,4 +1,4 @@
-package arkadiuszpalka.quizomania.handler;
+package arkadiuszpalka.quizomania.utils;
 
 import java.util.HashMap;
 import java.util.regex.Matcher;
@@ -17,7 +17,7 @@ public class SeedHandler {
 
     public static HashMap<String, String> readSeed(String seed) {
         HashMap<String, String> state = new HashMap<>(3);
-        Pattern pattern = Pattern.compile("o([0-9]{1,4})s([0-9]{1,4})e((true)?(false)?)p([0-9]{1,4})");
+        Pattern pattern = Pattern.compile("o([0-9]{1,4})s([0-9]{1,4})e((true)?(false)?)p([0-9]{1,3})");
         Matcher matcher = pattern.matcher(seed);
         if (matcher.find()) {
             state.put(KEY_QUESTIONS_ORDER, matcher.group(1));

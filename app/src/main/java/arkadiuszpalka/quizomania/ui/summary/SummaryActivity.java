@@ -17,7 +17,7 @@ import arkadiuszpalka.quizomania.ui.quizzes.QuizzesActivity;
 
 import static arkadiuszpalka.quizomania.ui.quiz.QuizActivity.EXTRA_QUESTION_COUNT;
 import static arkadiuszpalka.quizomania.ui.quiz.QuizActivity.EXTRA_QUIZ_SCORE;
-import static arkadiuszpalka.quizomania.adapter.QuizzesRecyclerViewAdapter.EXTRA_QUIZ_ID;
+import static arkadiuszpalka.quizomania.ui.quizzes.QuizzesRecyclerAdapter.EXTRA_QUIZ_ID;
 
 public class SummaryActivity extends AppCompatActivity {
     private long quizId;
