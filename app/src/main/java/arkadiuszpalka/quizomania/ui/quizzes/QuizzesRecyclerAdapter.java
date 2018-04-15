@@ -1,6 +1,8 @@
 package arkadiuszpalka.quizomania.ui.quizzes;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,13 +13,14 @@ import java.util.Locale;
 
 import arkadiuszpalka.quizomania.R;
 import arkadiuszpalka.quizomania.ui.quiz.QuizActivity;
+import arkadiuszpalka.quizomania.utils.AppConstants;
+
 
 public class QuizzesRecyclerAdapter extends RecyclerView.Adapter<QuizzesRecyclerAdapter.QuizzesViewHolder> {
 
-    public static final String EXTRA_QUIZ_ID = "arkadiuszpalka.quizomania.adapter.QUIZ_ID";
     private final QuizzesListPresenter presenter;
 
-    public QuizzesRecyclerAdapter(QuizzesListPresenter presenter) {
+    QuizzesRecyclerAdapter(QuizzesListPresenter presenter) {
         this.presenter = presenter;
     }
 
@@ -43,7 +46,7 @@ public class QuizzesRecyclerAdapter extends RecyclerView.Adapter<QuizzesRecycler
         private boolean isSolved;
         private final Context context;
 
-        public QuizzesViewHolder(View itemView) {
+        QuizzesViewHolder(final View itemView) {
             super(itemView);
             quizTitle = itemView.findViewById(R.id.text_quiz_item_title);
             quizState = itemView.findViewById(R.id.text_quiz_item_state);
@@ -51,8 +54,11 @@ public class QuizzesRecyclerAdapter extends RecyclerView.Adapter<QuizzesRecycler
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    //if isSolved -> removeSeed
-                    context.startActivity(QuizActivity.getStartIntent(context));
+                    presenter.setStateQuizActivity(id);
+                    Intent intent = QuizActivity.getStartIntent(context);
+                    intent.putExtra(AppConstants.EXTRA_QUIZ_ID, id);
+                    context.startActivity(intent);
+                    ((Activity)context).finish();
                 }
             });
         }

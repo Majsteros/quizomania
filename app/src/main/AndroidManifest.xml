@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="arkadiuszpalka.quizomania">
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -19,8 +20,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.quizzes.QuizzesActivity" />
-        <activity android:name=".ui.quiz.QuizActivity" />
         <activity android:name=".ui.summary.SummaryActivity" />
+        <activity android:name=".ui.quiz.QuizActivity" />
     </application>
 
 </manifest>

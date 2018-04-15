@@ -3,67 +3,90 @@ package arkadiuszpalka.quizomania.ui.summary;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.Locale;
 
 import arkadiuszpalka.quizomania.R;
-import arkadiuszpalka.quizomania.data.database.AppDatabaseHandler;
+import arkadiuszpalka.quizomania.data.AppDataManager;
+import arkadiuszpalka.quizomania.ui.base.BaseActivity;
 import arkadiuszpalka.quizomania.ui.quiz.QuizActivity;
 import arkadiuszpalka.quizomania.ui.quizzes.QuizzesActivity;
 
-import static arkadiuszpalka.quizomania.ui.quiz.QuizActivity.EXTRA_QUESTION_COUNT;
-import static arkadiuszpalka.quizomania.ui.quiz.QuizActivity.EXTRA_QUIZ_SCORE;
-import static arkadiuszpalka.quizomania.ui.quizzes.QuizzesRecyclerAdapter.EXTRA_QUIZ_ID;
+import static arkadiuszpalka.quizomania.utils.AppConstants.*;
 
-public class SummaryActivity extends AppCompatActivity {
+public class SummaryActivity extends BaseActivity implements SummaryMvp.View {
+
     private long quizId;
-    private Context context;
+    private SummaryPresenter<SummaryMvp.View> presenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_summary);
 
-        context = getApplicationContext();
-
         TextView resultText = findViewById(R.id.text_summary_result);
+
+        presenter = new SummaryPresenter<>(AppDataManager.getInstance(getApplicationContext()));
+        presenter.onAttach(this);
 
         Intent extras = getIntent();
         if (extras != null) {
             quizId = extras.getLongExtra(EXTRA_QUIZ_ID, 0);
-            int questionCount = extras.getIntExtra(EXTRA_QUESTION_COUNT, 0);
-            int score = extras.getIntExtra(EXTRA_QUIZ_SCORE, 0);
+            byte questionCount = extras.getByteExtra(EXTRA_QUESTION_COUNT, (byte) 0);
+            byte score = extras.getByteExtra(EXTRA_QUIZ_SCORE, (byte) 0);
+
             if (quizId != 0 || questionCount != 0) {
-                resultText.setText(String.format(Locale.getDefault(), "%d%%", (int) ((score / (float) questionCount) * 100)));
+                resultText.setText(String.format(Locale.getDefault(), "%d%%", (byte) ((score / (float) questionCount) * 100)));
+            } else {
+                openQuizzesActivity();
+                onError(R.string.occurred_unknown_error);
+                return;
             }
         } else {
-            Toast.makeText(context, context.getString(R.string.occurred_unknown_error), Toast.LENGTH_LONG).show();
-            startActivity(new Intent(context, QuizzesActivity.class));
-            finish();
+            openQuizzesActivity();
+            onError(R.string.occurred_unknown_error);
             return;
         }
 
         findViewById(R.id.button_to_quizzes_activity).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(context, QuizzesActivity.class));
-                finish();
+                openQuizzesActivity();
             }
         });
 
         findViewById(R.id.button_start_again).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AppDatabaseHandler.getInstance(context.getApplicationContext()).removeSeed(quizId);
-                Intent intent = new Intent(context, QuizActivity.class);
-                intent.putExtra(EXTRA_QUIZ_ID, quizId);
-                startActivity(intent);
-                finish();
+                openQuizActivity();
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        presenter.onDetach();
+        super.onDestroy();
+    }
+
+    @Override
+    public void openQuizzesActivity() {
+        startActivity(QuizzesActivity.getStartIntent(this));
+        finish();
+    }
+
+    @Override
+    public void openQuizActivity() {
+        presenter.onStartAgain(quizId);
+        Intent intent = QuizActivity.getStartIntent(this);
+        intent.putExtra(EXTRA_QUIZ_ID, quizId);
+        startActivity(intent);
+        finish();
+    }
+
+    public static Intent getStartIntent(Context context) {
+        return new Intent(context, SummaryActivity.class);
     }
 }

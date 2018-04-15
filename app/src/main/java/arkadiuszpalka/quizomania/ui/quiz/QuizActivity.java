@@ -2,139 +2,145 @@ package arkadiuszpalka.quizomania.ui.quiz;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.TreeMap;
 
 import arkadiuszpalka.quizomania.R;
+import arkadiuszpalka.quizomania.data.AppDataManager;
+import arkadiuszpalka.quizomania.ui.base.BaseActivity;
 import arkadiuszpalka.quizomania.ui.quizzes.QuizzesActivity;
 import arkadiuszpalka.quizomania.ui.summary.SummaryActivity;
-import arkadiuszpalka.quizomania.data.database.AppDatabaseHandler;
-import arkadiuszpalka.quizomania.utils.SeedHandler;
 
-import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.*;
-import static arkadiuszpalka.quizomania.ui.quizzes.QuizzesRecyclerAdapter.EXTRA_QUIZ_ID;
+import static arkadiuszpalka.quizomania.utils.AppConstants.EXTRA_QUESTION_COUNT;
+import static arkadiuszpalka.quizomania.utils.AppConstants.EXTRA_QUESTION_ORDER;
+import static arkadiuszpalka.quizomania.utils.AppConstants.EXTRA_QUIZ_ID;
+import static arkadiuszpalka.quizomania.utils.AppConstants.EXTRA_QUIZ_SCORE;
 
-public class QuizActivity extends AppCompatActivity {
-    public static final String EXTRA_QUESTION_ORDER = "arkadiuszpalka.quizomania.adapter.QUESTION_ORDER";
-    public static final String EXTRA_QUESTION_COUNT = "arkadiuszpalka.quizomania.adapter.QUESTION_COUNT";
-    public static final String EXTRA_QUIZ_SCORE = "arkadiuszpalka.quizomania.adapter.QUIZ_SCORE";
-    public static final String KEY_QUIZ_SCORE = "quiz_score";
+public class QuizActivity extends BaseActivity implements QuizMvp.View{
 
-    private int questionOrder, questionCount, quizScore;
-
-    @Override
-    public void onBackPressed() {
-        startActivity(new Intent(getApplicationContext(), QuizzesActivity.class));
-        finish();
-    }
+    private QuizPresenter<QuizMvp.View> presenter;
+    private TextView title;
+    private ProgressBar progressBar;
+    private RadioGroup radioGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quiz);
 
-        TextView title = findViewById(R.id.text_quiz_title);
-        ProgressBar progressBar = findViewById(R.id.progressbar_quiz);
-        RadioGroup radioGroup = findViewById(R.id.radiogroup_quiz_answers);
+        title = findViewById(R.id.text_quiz_title);
+        progressBar = findViewById(R.id.progressbar_quiz);
+        radioGroup = findViewById(R.id.radiogroup_quiz_answers);
 
-        final Context context = getApplicationContext();
-        final AppDatabaseHandler db = AppDatabaseHandler.getInstance(context);
+        presenter = new QuizPresenter<>(AppDataManager.getInstance(getApplicationContext()));
+        presenter.onAttach(this);
 
         final Intent extras = getIntent();
         if (extras != null) {
             final long quizId = extras.getLongExtra(EXTRA_QUIZ_ID, 0);
+
             if (quizId != 0) {
-                questionOrder = extras.getIntExtra(EXTRA_QUESTION_ORDER, 1);
-                quizScore = extras.getIntExtra(EXTRA_QUIZ_SCORE, 0);
-
-                if (questionOrder == 1 && db.getCountOfSeedsById(quizId) == 0) {
-                    db.addSeed(quizId, SeedHandler.generateSeed(questionOrder, 0, false, 0));
-                } else {
-                    HashMap<String, String> state = SeedHandler.readSeed(db.getSeed(quizId));
-                    questionOrder = Integer.parseInt(state.get(KEY_QUESTIONS_ORDER));
-                    quizScore = Integer.parseInt(state.get(KEY_QUIZ_SCORE));
-                }
-                questionCount = extras.getIntExtra(EXTRA_QUESTION_COUNT, 0);
-                HashMap<String, Object> question = db.getQuestionByQuizIdOrder(quizId, questionOrder);
-
-                int id = (int) question.get(KEY_QUESTIONS_ID);
-                title.setText((String) question.get(KEY_QUESTIONS_TEXT));
-                questionOrder = (int) question.get(KEY_QUESTIONS_ORDER);
-
-                if (questionCount == 0) {
-                    questionCount = db.getCountOfQuestionsById(quizId);
-                }
-
-                progressBar.setProgress((int) ((questionOrder / (float) questionCount) * 100));
-
-                ArrayList<TreeMap<String, Object>> answers = db.getAnswersByQuestionId(id);
-                for (TreeMap<String, Object> answer : answers) {
-                    String answerText = (String) answer.get(KEY_ANSWERS_TEXT);
-                    int answerOrder = (Integer) answer.get(KEY_ANSWERS_ORDER);
-                    int answerIsCorrect = (Integer) answer.get(KEY_ANSWERS_IS_CORRECT);
-
-                    RadioButton radioButton = new RadioButton(this);
-                    radioButton.setId(answerOrder);
-                    radioButton.setText(answerText);
-
-                    if (answerIsCorrect == 1) {
-                        radioButton.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                nextQuestion(context, db, quizId, questionCount, questionOrder, quizScore, true);
-                            }
-                        });
-                    } else {
-                        radioButton.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                nextQuestion(context, db, quizId, questionCount, questionOrder, quizScore, false);
-
-                            }
-                        });
-                    }
-                    radioGroup.addView(radioButton);
-                }
+                byte questionOrder = extras.getByteExtra(EXTRA_QUESTION_ORDER, (byte) 1);
+                byte quizScore = extras.getByteExtra(EXTRA_QUIZ_SCORE, (byte) 0);
+                byte questionCount = extras.getByteExtra(EXTRA_QUESTION_COUNT, (byte) 0);
+                presenter.decideState(quizId, questionOrder, questionCount, quizScore);
             }
+
         } else {
-            Toast.makeText(context, context.getString(R.string.occurred_unknown_error), Toast.LENGTH_LONG).show();
-            startActivity(new Intent(context, QuizzesActivity.class));
-            finish();
+            openQuizzesActivity();
+            onError(getString(R.string.occurred_unknown_error));
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        presenter.onDetach();
+        super.onDestroy();
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(QuizzesActivity.getStartIntent(this));
+        finish();
+    }
+
+    @Override
+    public void setProgress(byte progress) {
+        progressBar.setProgress(progress);
+    }
+
+    @Override
+    public void setTitle(String title) {
+        this.title.setText(title);
+    }
+
+    @Override
+    public void setTitle(int resId) {
+        setTitle(getString(resId));
+    }
+
+    @Override
+    public void addRadioButton(final long quizId, final byte questionCount, final byte questionOrder, final byte quizScore, String answerText, byte answerOrder, byte answerIsCorrect) {
+        RadioButton radioButton = new RadioButton(this);
+        radioButton.setId(answerOrder);
+        radioButton.setText(answerText);
+        LinearLayout.LayoutParams layoutParams = new RadioGroup.LayoutParams(
+                RadioGroup.LayoutParams.MATCH_PARENT,
+                RadioGroup.LayoutParams.WRAP_CONTENT);
+
+        if (answerIsCorrect == 1) {
+            radioButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    presenter.nextQuestion(quizId, questionCount, questionOrder, quizScore, true);
+                }
+            });
+        } else {
+            radioButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    presenter.nextQuestion(quizId, questionCount, questionOrder, quizScore, false);
+                }
+            });
+        }
+
+        radioGroup.addView(radioButton, 0, layoutParams);
+    }
+
+    @Override
+    public void openQuizzesActivity() {
+        startActivity(QuizzesActivity.getStartIntent(this));
+        finish();
+    }
+
+    @Override
+    public void openSummaryActivity(long quizId, byte questionCount, byte quizScore) {
+        Intent intent = SummaryActivity.getStartIntent(this);
+        intent.putExtra(EXTRA_QUIZ_ID, quizId);
+        intent.putExtra(EXTRA_QUESTION_COUNT, questionCount);
+        intent.putExtra(EXTRA_QUIZ_SCORE, quizScore);
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    public void openQuizActivity(long quizId, byte questionCount, byte quizScore, byte questionOrder) {
+        Intent intent = QuizActivity.getStartIntent(this);
+        intent.putExtra(EXTRA_QUIZ_ID, quizId);
+        intent.putExtra(EXTRA_QUESTION_COUNT, questionCount);
+        intent.putExtra(EXTRA_QUESTION_ORDER, questionOrder);
+        intent.putExtra(EXTRA_QUIZ_SCORE, quizScore);
+        startActivity(intent);
+        finish();
     }
 
     public static Intent getStartIntent(Context context) {
         return new Intent(context, QuizActivity.class);
-    }
-
-    private void nextQuestion(Context context, AppDatabaseHandler db, long quizId, int questionCount, int questionOrder, int quizScore, boolean addScore) {
-        if (questionOrder == questionCount) {
-            Intent intent = new Intent(context, SummaryActivity.class);
-            intent.putExtra(EXTRA_QUIZ_ID, quizId);
-            intent.putExtra(EXTRA_QUESTION_COUNT, questionCount);
-            intent.putExtra(EXTRA_QUIZ_SCORE, addScore ? ++quizScore : quizScore);
-            db.updateSeed(quizId, SeedHandler.generateSeed(questionOrder, quizScore, true, (int) ((quizScore / (float) questionCount) * 100)));
-            startActivity(intent);
-            finish();
-            return;
-        }
-        Intent intent = new Intent(context, QuizActivity.class);
-        intent.putExtra(EXTRA_QUIZ_ID, quizId);
-        intent.putExtra(EXTRA_QUESTION_COUNT, questionCount);
-        intent.putExtra(EXTRA_QUESTION_ORDER, ++questionOrder);
-        intent.putExtra(EXTRA_QUIZ_SCORE, addScore ? ++quizScore : quizScore);
-        db.updateSeed(quizId, SeedHandler.generateSeed(questionOrder, quizScore, false, (int) ((questionOrder / (float) questionCount) * 100)));
-        startActivity(intent);
-        finish();
     }
 }

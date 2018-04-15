@@ -275,7 +275,7 @@ public class AppDatabaseHandler extends SQLiteOpenHelper implements DatabaseHand
         while (cursor.moveToNext()) {
             question.put(KEY_QUESTIONS_ID, cursor.getInt(0));
             question.put(KEY_QUESTIONS_TEXT, cursor.getString(1));
-            question.put(KEY_QUESTIONS_ORDER, cursor.getInt(2));
+            question.put(KEY_QUESTIONS_ORDER, (byte) cursor.getInt(2));
         }
         cursor.close();
         db.close();
@@ -290,8 +290,8 @@ public class AppDatabaseHandler extends SQLiteOpenHelper implements DatabaseHand
         while (cursor.moveToNext()) {
             TreeMap<String, Object> answer = new TreeMap<>();
             answer.put(KEY_ANSWERS_TEXT, cursor.getString(0));
-            answer.put(KEY_ANSWERS_ORDER, cursor.getInt(1));
-            answer.put(KEY_ANSWERS_IS_CORRECT, cursor.getInt(2));
+            answer.put(KEY_ANSWERS_ORDER, (byte) cursor.getInt(1));
+            answer.put(KEY_ANSWERS_IS_CORRECT, (byte) cursor.getInt(2));
             answers.add(answer);
         }
         cursor.close();
@@ -355,12 +355,12 @@ public class AppDatabaseHandler extends SQLiteOpenHelper implements DatabaseHand
     }
 
     @Override
-    public int getCountOfQuestionsById(long id) {
+    public byte getCountOfQuestionsById(long id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM `" + TABLE_QUESTIONS + "` WHERE `" + KEY_QUESTIONS_QUIZ_ID + "` = '"+ Long.toString(id) +"'", null);
-        int value = 0;
+        byte value = 0;
         while (cursor.moveToNext()) {
-            value = cursor.getInt(0);
+            value = (byte) cursor.getInt(0);
         }
         cursor.close();
         db.close();

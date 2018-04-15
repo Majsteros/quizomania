@@ -30,7 +30,7 @@ public interface DatabaseHandler {
 
     HashMap<String, Object> getQuestionByQuizIdOrder(long id, int order);
 
-    int getCountOfQuestionsById(long id);
+    byte getCountOfQuestionsById(long id);
 
     int getQuestionIdByQuizId(long id);
 

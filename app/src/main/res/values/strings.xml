@@ -1,17 +1,27 @@
 <resources>
     <string name="app_name">Quizomania</string>
     <string name="dialog_ok">OK</string>
-    <string name="downloading_data">Downloading data…</string>
     <string name="congratulations_text">Bravo!</string>
     <string name="answered_text">You answered for:</string>
     <string name="text_questions">questions</string>
     <string name="go_to_quizzes">Back to quizzes list</string>
     <string name="start_again">Solve again</string>
-    <string name="quiz_progress_solve">Quiz solved in </string>
-    <string name="quiz_last_score">Last score is </string>
-    <string name="quiz_tap_to_start">Tap to start quiz</string>
+    <string name="quizzes_progress_solve">Quiz solved in </string>
+    <string name="quizzes_last_score">Last score is </string>
+    <string name="quizzes_tap_to_start">Tap to start quiz</string>
+    <string name="start_offline">Start in offline mode</string>
+    <string name="retry_connection">Retry connection and synchronization</string>
     <string name="default_text" translatable="false">Lorem Ipsum</string>
+    <string name="answer_good">Good!</string>
+    <string name="answer_bad">You\'re wrong!</string>
     <!-- Errors -->
     <string name="default_title_error">Occurred error</string>
     <string name="occurred_unknown_error">Occurred unknown error</string>
+    <string name="occurred_update_error">Occurred error when tried do update</string>
+    <string name="no_connection_error">You are\'t connected with internet to do update.</string>
+    <!-- State messages -->
+    <string name="downloading_data">Downloading quizzes…</string>
+    <string name="inserting_quizzes">Inserting quizzes…</string>
+    <string name="inserting_questions">Inserting questions…</string>
+    <string name="inserting_answers">Inserting answers…</string>
 </resources>

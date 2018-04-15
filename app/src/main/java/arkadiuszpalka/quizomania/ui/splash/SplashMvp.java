@@ -13,6 +13,10 @@ public interface SplashMvp {
         void openQuizzesActivity();
 
         void hideProgress();
+
+        void showButtons();
+
+        void hideButtons();
     }
 
     interface Presenter<V extends SplashMvp.View> extends BaseMvp.Presenter<V> {

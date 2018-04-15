@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-//TODO optimize imports
+
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_ANSWERS_IS_CORRECT;
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_ANSWERS_ORDER;
 import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_ANSWERS_TEXT;

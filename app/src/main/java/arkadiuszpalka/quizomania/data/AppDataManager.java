@@ -20,7 +20,7 @@ import static arkadiuszpalka.quizomania.data.database.AppDatabaseHandler.KEY_QUE
 
 public class AppDataManager implements DataManager {
 
-    public static final String TAG = "AppDataManager";
+    private static final String TAG = "AppDataManager";
 
     private static volatile AppDataManager instance;
     private final DatabaseHandler dbHandler;
@@ -112,7 +112,7 @@ public class AppDataManager implements DataManager {
     }
 
     @Override
-    public int getCountOfQuestionsById(long id) {
+    public byte getCountOfQuestionsById(long id) {
         return dbHandler.getCountOfQuestionsById(id);
     }
 
