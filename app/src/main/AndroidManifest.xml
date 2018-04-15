@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="arkadiuszpalka.quizomania">
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -11,16 +12,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activity.MainActivity">
+        <activity android:name=".ui.splash.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activity.QuizzesActivity" />
-        <activity android:name=".activity.QuizActivity" />
-        <activity android:name=".activity.SummaryActivity" />
+        <activity android:name=".ui.quizzes.QuizzesActivity" />
+        <activity android:name=".ui.summary.SummaryActivity" />
+        <activity android:name=".ui.quiz.QuizActivity" />
     </application>
 
 </manifest>

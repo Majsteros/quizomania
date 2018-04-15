@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="arkadiuszpalka.quizomania.activity.SummaryActivity">
+    tools:context="arkadiuszpalka.quizomania.ui.summary.SummaryActivity">
 
     <TextView
         android:id="@+id/text_summary_bravo"

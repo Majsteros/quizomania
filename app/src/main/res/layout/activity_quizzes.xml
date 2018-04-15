@@ -5,6 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:scrollbars="vertical"
-    tools:context="arkadiuszpalka.quizomania.activity.QuizzesActivity">
+    tools:context="arkadiuszpalka.quizomania.ui.quizzes.QuizzesActivity">
 
 </android.support.v7.widget.RecyclerView>
