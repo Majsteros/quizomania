@@ -14,8 +14,10 @@ Wszelkie prawa zastrzeżone.
 
 ## Nadchodzące zmiany
 
-1. Wprowadzenie struktury MVP
-2. Wersjonowanie buildów
+1. ~~Wprowadzenie struktury MVP~~
+2. ~~Wersjonowanie buildów~~
 3. ~~Thread safety dla bazy danych~~
 4. Konfiguracja Android Lint
 5. Testy
+6. Pobieranie obrazu dla każdego quizu
+7. Optymalizacja pobierania
